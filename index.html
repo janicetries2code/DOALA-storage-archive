@@ -103,8 +103,8 @@
         <select id="filterYear" class="field !w-auto" aria-label="Filter by academic year"><option value="">All years</option></select>
         <select id="filterSemester" class="field !w-auto" aria-label="Filter by semester">
           <option value="">All semesters</option>
-          <option value="Semester 1">Sem 1</option>
-          <option value="Semester 2">Sem 2</option>
+          <option value="Sem 1">Semester 1</option>
+          <option value="Sem 2">Semester 2</option>
         </select>
         <button id="refreshBtn" type="button" title="Reload items from the cloud database"
           class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 whitespace-nowrap">
@@ -198,21 +198,21 @@
         <div class="grid grid-cols-1 sm:grid-cols-6 gap-4">
           <div class="sm:col-span-2">
             <label class="lbl" for="courseCode">Course Code <span class="text-rose-500">*</span></label>
-            <input id="courseCode" required maxlength="20" placeholder="e.g. CS1010" class="field" />
+            <input id="courseCode" required maxlength="20" placeholder="e.g. LAD1010" class="field" />
           </div>
           <div class="sm:col-span-4">
             <label class="lbl" for="courseName">Course Name <span class="text-rose-500">*</span></label>
-            <input id="courseName" required maxlength="100" placeholder="e.g. Programming Methodology" class="field" />
+            <input id="courseName" required maxlength="100" placeholder="e.g. Intro to LA" class="field" />
           </div>
 
           <p class="sm:col-span-6 -mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Course Coordinator</p>
           <div class="sm:col-span-3">
             <label class="lbl" for="coordinatorName">Name <span class="text-rose-500">*</span></label>
-            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. Jane Tan" class="field" />
+            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. John Tan" class="field" />
           </div>
           <div class="sm:col-span-3">
             <label class="lbl" for="coordinatorEmail">Email <span class="text-rose-500">*</span></label>
-            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@university.edu" class="field" />
+            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@nus.edu.sg" class="field" />
           </div>
 
           <div class="sm:col-span-6 -mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -231,7 +231,7 @@
               </div>
               <div>
                 <label class="lbl" for="tutorEmail">Email <span class="text-rose-500">*</span></label>
-                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@university.edu" class="field" />
+                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@uns.edu.sg" class="field" />
               </div>
             </div>
           </div>
@@ -340,7 +340,7 @@
 <script>
 // ======================= CONFIGURATION — paste your keys here =======================
 const SUPABASE_URL = "https://bnszdnxzpqicknwkrwrh.supabase.co";       // e.g. "https://abcdxyz.supabase.co"
-const SUPABASE_ANON_KEY = "sb_publishable_8zlkUCVX5P_Il70qmVmA9g_FtcOVoev";  // your project's "anon public" API key
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuc3pkbnh6cHFpY2tud2tyd3JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNjg1MTQsImV4cCI6MjEwNzc0NDUxNH0.3JUagPMmVSxZ91xROQ74ArNjko24NtPpT_Gfh3phF4Y";  // your project's "anon public" API key
 const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes, e.g. "https://archive.example.com/"
 // =====================================================================================
 
@@ -383,8 +383,8 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   const photoSrc = item => (item && typeof item.photo === "string" && item.photo.startsWith("data:image/")) ? item.photo : "";
   const titleOf = i => i.courseCode || i.courseName || i.studentName || i.id;
   const termLabel = i => [i.academicYear, i.semester && i.semester.replace("Semester", "Sem")].filter(Boolean).join(" · ");
-  const semStyle = s => s === "Semester 1" ? "bg-indigo-50 text-indigo-700 ring-indigo-200"
-                      : s === "Semester 2" ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+  const semStyle = s => s === "Sem 1" ? "bg-indigo-50 text-indigo-700 ring-indigo-200"
+                      : s === "Sem 2" ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
                       : "bg-slate-100 text-slate-600 ring-slate-200";
   const dash = '<span class="text-slate-300">—</span>';
 
@@ -593,7 +593,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     fillSelect($("academicYear"), ay, "Select academic year");
     const gy = []; for (let y = CUR_YEAR - 3; y <= CUR_YEAR + 8; y++) gy.push(String(y));
     fillSelect($("gradYear"), gy, "Select graduation year");
-    buildChips("semesterChips", "semester", [{ value: "Semester 1" }, { value: "Semester 2" }]);
+    buildChips("semesterChips", "semester", [{ value: "Sem 1" }, { value: "Sem 2" }]);
     buildChips("contactMethods", "contactMethod", Object.keys(CONTACT_METHODS).map(k => ({ value: k, icon: CONTACT_METHODS[k].icon })));
     $("academicYear").value = DEFAULT_AY;
     applyTutorSame();
