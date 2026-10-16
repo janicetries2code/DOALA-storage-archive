@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Storage & Archival Dashboard</title>
+<title>NUS DOA LA Storage & Archival Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -103,8 +103,8 @@
         <select id="filterYear" class="field !w-auto" aria-label="Filter by academic year"><option value="">All years</option></select>
         <select id="filterSemester" class="field !w-auto" aria-label="Filter by semester">
           <option value="">All semesters</option>
-          <option value="Semester 1">Semester 1</option>
-          <option value="Semester 2">Semester 2</option>
+          <option value="Semester 1">Sem 1</option>
+          <option value="Semester 2">Sem 2</option>
         </select>
         <button id="refreshBtn" type="button" title="Reload items from the cloud database"
           class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 whitespace-nowrap">
@@ -273,7 +273,7 @@
           <span class="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><i data-lucide="camera" class="h-4 w-4"></i></span>
           <h3 class="text-sm font-semibold">4. Archival Details</h3>
         </div>
-        <span class="lbl">Photo of Storage Item <span class="text-slate-400 font-normal">(optional)</span></span>
+        <span class="lbl">Photo of Storage Item <span class="text-slate-400 font-normal"></span></span>
         <input id="photo" type="file" accept="image/*" class="sr-only peer" />
         <label id="photoDrop" for="photo"
           class="flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-indigo-400 cursor-pointer px-3 py-6 text-center transition peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500">
@@ -339,8 +339,8 @@
 
 <script>
 // ======================= CONFIGURATION — paste your keys here =======================
-const SUPABASE_URL = "";       // e.g. "https://abcdxyz.supabase.co"
-const SUPABASE_ANON_KEY = "";  // your project's "anon public" API key
+const SUPABASE_URL = "https://bnszdnxzpqicknwkrwrh.supabase.co";       // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_ANON_KEY = "sb_publishable_8zlkUCVX5P_Il70qmVmA9g_FtcOVoev";  // your project's "anon public" API key
 const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes, e.g. "https://archive.example.com/"
 // =====================================================================================
 
