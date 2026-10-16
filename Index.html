@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Storage & Archival Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .fade-in { animation: fade .15s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .field:user-invalid { border-color: #fb7185; }
+  [hidden] { display: none !important; }
+</style>
+<style type="text/tailwindcss">
+  .field { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500; }
+  .lbl { @apply block text-sm font-medium mb-1; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+<!-- ===================================================================== -->
+<!-- MANAGER APP (entry form + dashboard). Hidden when the URL has ?id=...  -->
+<!-- ===================================================================== -->
+<div id="adminApp" hidden>
+
+<!-- Header -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+        <i data-lucide="archive" class="h-5 w-5"></i>
+      </div>
+      <div>
+        <h1 class="text-lg font-semibold leading-tight">Storage &amp; Archival</h1>
+        <p class="text-xs text-slate-500">Track, label and locate archived course materials</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="exportBtn" class="hidden sm:inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+        <i data-lucide="download" class="h-4 w-4"></i> Export JSON
+      </button>
+      <button type="button" data-open-form class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
+        <i data-lucide="plus" class="h-4 w-4"></i> Add Item
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+  <!-- Setup banner (shown only if Supabase keys are missing / connection fails) -->
+  <div id="dbBanner" hidden class="mb-6 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm px-4 py-3 flex gap-3 items-start">
+    <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0 mt-0.5"></i>
+    <div id="dbBannerText"></div>
+  </div>
+
+  <!-- Summary -->
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-slate-500">Total Items Stored</p>
+        <span class="h-9 w-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i data-lucide="package" class="h-5 w-5"></i></span>
+      </div>
+      <p id="totalCount" class="mt-3 text-4xl font-semibold tracking-tight">0</p>
+      <p id="lastAdded" class="mt-1 text-xs text-slate-400">No items yet</p>
+      <p id="dbStatus" class="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400">
+        <span id="dbDot" class="h-2 w-2 rounded-full bg-slate-300"></span><span id="dbStatusText">Cloud database: not connected</span>
+      </p>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-slate-500">Courses Archived</p>
+        <span class="h-9 w-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i data-lucide="book-open" class="h-5 w-5"></i></span>
+      </div>
+      <p id="courseCount" class="mt-3 text-4xl font-semibold tracking-tight">0</p>
+      <p id="topCourse" class="mt-1 text-xs text-slate-400">—</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm text-slate-500">By Academic Term</p>
+        <span class="h-9 w-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i data-lucide="calendar-days" class="h-5 w-5"></i></span>
+      </div>
+      <div id="termBreakdown" class="space-y-2"></div>
+    </div>
+  </section>
+
+  <!-- Directory -->
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col xl:flex-row gap-3 xl:items-center xl:justify-between">
+      <h2 class="text-base font-semibold flex items-center gap-2 shrink-0">
+        <i data-lucide="folder-open" class="h-5 w-5 text-indigo-600"></i> Item Directory
+        <span id="resultCount" class="text-xs font-normal text-slate-400"></span>
+      </h2>
+      <div class="flex flex-wrap lg:flex-nowrap gap-2 items-center">
+        <div class="relative flex-1 min-w-[14rem]">
+          <i data-lucide="search" class="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input id="search" type="search" placeholder="Search course, student, coordinator, tutor…" class="field pl-9" />
+        </div>
+        <select id="filterYear" class="field !w-auto" aria-label="Filter by academic year"><option value="">All years</option></select>
+        <select id="filterSemester" class="field !w-auto" aria-label="Filter by semester">
+          <option value="">All semesters</option>
+          <option value="Semester 1">Semester 1</option>
+          <option value="Semester 2">Semester 2</option>
+        </select>
+        <button id="refreshBtn" type="button" title="Reload items from the cloud database"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 whitespace-nowrap">
+          <i data-lucide="refresh-cw" class="h-4 w-4"></i> Refresh
+        </button>
+        <button id="exportCsvBtn" type="button" title="Download all items as storage_archive_backup.csv"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+          <i data-lucide="file-spreadsheet" class="h-4 w-4"></i> Export CSV
+        </button>
+      </div>
+    </div>
+
+    <div id="loading" class="hidden p-12 text-center text-sm text-slate-500">
+      <div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin"></div>
+      Loading items from the cloud…
+    </div>
+
+    <div id="tableWrap" class="overflow-x-auto">
+      <table class="w-full min-w-[1040px] text-sm text-left">
+        <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200">
+          <tr>
+            <th class="px-4 py-3 font-semibold">Photo</th>
+            <th class="px-4 py-3 font-semibold">Course</th>
+            <th class="px-4 py-3 font-semibold">Term</th>
+            <th class="px-4 py-3 font-semibold">Course Coordinator</th>
+            <th class="px-4 py-3 font-semibold">Tutor</th>
+            <th class="px-4 py-3 font-semibold">Student</th>
+            <th class="px-4 py-3 font-semibold">Preferred Contact</th>
+            <th class="px-4 py-3 font-semibold">Added</th>
+          </tr>
+        </thead>
+        <tbody id="rows" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+
+    <div id="empty" class="hidden p-12 text-center">
+      <div class="mx-auto h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+        <i data-lucide="inbox" class="h-7 w-7"></i>
+      </div>
+      <p id="emptyTitle" class="font-medium">No items yet</p>
+      <p id="emptySub" class="text-sm text-slate-500">Add your first item to generate its QR label.</p>
+      <button type="button" id="emptyAddBtn" data-open-form class="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
+        <i data-lucide="plus" class="h-4 w-4"></i> Add Item
+      </button>
+    </div>
+  </section>
+</main>
+
+<!-- Add Item (form) modal -->
+<div id="formModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+  <div id="formBackdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+  <form id="itemForm" class="relative bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden fade-in">
+    <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-200">
+      <div>
+        <h2 id="formTitle" class="text-base font-semibold flex items-center gap-2">
+          <i data-lucide="plus-circle" class="h-5 w-5 text-indigo-600"></i> Archive New Item
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5">A unique ID and a scannable QR link label are generated automatically. Fields marked <span class="text-rose-500">*</span> are required.</p>
+      </div>
+      <button type="button" id="formClose" class="h-8 w-8 shrink-0 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500" aria-label="Close form">
+        <i data-lucide="x" class="h-5 w-5"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto px-6 py-5 space-y-7">
+
+      <!-- 1. Academic Context -->
+      <section>
+        <div class="flex items-center gap-2 mb-4">
+          <span class="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i data-lucide="calendar-days" class="h-4 w-4"></i></span>
+          <h3 class="text-sm font-semibold">1. Academic Context</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="lbl" for="academicYear">Academic Year <span class="text-rose-500">*</span></label>
+            <select id="academicYear" required class="field"></select>
+          </div>
+          <div>
+            <span class="lbl">Semester <span class="text-rose-500">*</span></span>
+            <div id="semesterChips" class="grid grid-cols-2 gap-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Course Details -->
+      <section class="border-t border-slate-100 pt-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i data-lucide="book-open" class="h-4 w-4"></i></span>
+          <h3 class="text-sm font-semibold">2. Course Details</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-6 gap-4">
+          <div class="sm:col-span-2">
+            <label class="lbl" for="courseCode">Course Code <span class="text-rose-500">*</span></label>
+            <input id="courseCode" required maxlength="20" placeholder="e.g. CS1010" class="field" />
+          </div>
+          <div class="sm:col-span-4">
+            <label class="lbl" for="courseName">Course Name <span class="text-rose-500">*</span></label>
+            <input id="courseName" required maxlength="100" placeholder="e.g. Programming Methodology" class="field" />
+          </div>
+
+          <p class="sm:col-span-6 -mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Course Coordinator</p>
+          <div class="sm:col-span-3">
+            <label class="lbl" for="coordinatorName">Name <span class="text-rose-500">*</span></label>
+            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. Jane Tan" class="field" />
+          </div>
+          <div class="sm:col-span-3">
+            <label class="lbl" for="coordinatorEmail">Email <span class="text-rose-500">*</span></label>
+            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@university.edu" class="field" />
+          </div>
+
+          <div class="sm:col-span-6 -mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Tutor</p>
+            <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-slate-600 select-none">
+              <input id="tutorSame" type="checkbox" class="peer sr-only" />
+              <span class="relative h-5 w-9 rounded-full bg-slate-300 transition peer-checked:bg-indigo-600 peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500 peer-focus-visible:ring-offset-1 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-4"></span>
+              Same as Course Coordinator
+            </label>
+          </div>
+          <div id="tutorFields" class="sm:col-span-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="lbl" for="tutorName">Name <span class="text-rose-500">*</span></label>
+                <input id="tutorName" required maxlength="80" placeholder="e.g. Alex Lim" class="field" />
+              </div>
+              <div>
+                <label class="lbl" for="tutorEmail">Email <span class="text-rose-500">*</span></label>
+                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@university.edu" class="field" />
+              </div>
+            </div>
+          </div>
+          <p id="tutorSameNote" class="hidden sm:col-span-6 text-xs text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
+            Tutor details will be copied from the Course Coordinator when you save.
+          </p>
+        </div>
+      </section>
+
+      <!-- 3. Student Details -->
+      <section class="border-t border-slate-100 pt-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="h-7 w-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i data-lucide="graduation-cap" class="h-4 w-4"></i></span>
+          <h3 class="text-sm font-semibold">3. Student Details</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="lbl" for="studentName">Student Name <span class="text-rose-500">*</span></label>
+            <input id="studentName" required maxlength="80" placeholder="e.g. Marcus Ong" class="field" />
+          </div>
+          <div>
+            <label class="lbl" for="gradYear">Graduation Year <span class="text-rose-500">*</span></label>
+            <select id="gradYear" required class="field"></select>
+          </div>
+          <div class="sm:col-span-2">
+            <span class="lbl">Preferred Contact Method <span class="text-rose-500">*</span></span>
+            <div id="contactMethods" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="lbl" for="contactHandle"><span id="contactLabel">Contact handle / number / email</span> <span class="text-rose-500">*</span></label>
+            <input id="contactHandle" required maxlength="120" placeholder="Select a preferred method first" class="field" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Archival Details -->
+      <section class="border-t border-slate-100 pt-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><i data-lucide="camera" class="h-4 w-4"></i></span>
+          <h3 class="text-sm font-semibold">4. Archival Details</h3>
+        </div>
+        <span class="lbl">Photo of Storage Item <span class="text-slate-400 font-normal">(optional)</span></span>
+        <input id="photo" type="file" accept="image/*" class="sr-only peer" />
+        <label id="photoDrop" for="photo"
+          class="flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-indigo-400 cursor-pointer px-3 py-6 text-center transition peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500">
+          <i data-lucide="camera" class="h-6 w-6 text-slate-400"></i>
+          <span class="text-sm font-medium text-slate-600">Take or upload a photo</span>
+          <span class="text-xs text-slate-400">JPG, PNG or WebP · auto-resized to keep it light</span>
+        </label>
+        <div id="photoPreviewWrap" class="hidden items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+          <img id="photoPreview" alt="Selected photo preview" class="h-20 w-20 shrink-0 rounded-lg object-cover border border-slate-200 bg-white" />
+          <div class="min-w-0 flex-1">
+            <p id="photoMeta" class="text-xs text-slate-500 truncate"></p>
+            <div class="mt-1.5 flex gap-3 text-xs">
+              <label for="photo" class="cursor-pointer text-indigo-600 hover:underline">Replace</label>
+              <button type="button" id="photoRemove" class="text-rose-600 hover:underline">Remove</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-2 px-6 py-4 border-t border-slate-200 bg-slate-50">
+      <button type="button" id="formClear" class="text-sm text-slate-500 hover:text-slate-700 hover:underline">Clear form</button>
+      <div class="flex gap-2">
+        <button type="button" id="formCancel" class="px-4 py-2 text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-100">Cancel</button>
+        <button id="submitBtn" type="submit"
+          class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+          <i data-lucide="qr-code" class="h-4 w-4"></i> <span id="submitLabel">Save &amp; Generate QR</span>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Detail / QR label modal -->
+<div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+  <div id="modalBackdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[92vh] overflow-y-auto fade-in">
+    <button id="modalClose" class="absolute top-3 right-3 z-10 h-8 w-8 rounded-lg bg-white/90 shadow-sm hover:bg-slate-100 flex items-center justify-center text-slate-500" aria-label="Close">
+      <i data-lucide="x" class="h-5 w-5"></i>
+    </button>
+    <div id="modalBody" class="p-6 sm:p-8"></div>
+  </div>
+</div>
+
+</div><!-- /adminApp -->
+
+<!-- ===================================================================== -->
+<!-- PUBLIC SCAN VIEW. Shown only when the URL has ?id=...                  -->
+<!-- ===================================================================== -->
+<div id="publicApp" hidden>
+  <div class="max-w-xl mx-auto px-4 py-6 sm:py-10">
+    <div class="flex items-center gap-2 mb-4 text-slate-500">
+      <span class="h-8 w-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center"><i data-lucide="archive" class="h-4 w-4"></i></span>
+      <span class="text-sm font-medium">Archival Public View</span>
+    </div>
+    <div id="publicBody" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"></div>
+    <p class="mt-4 text-center text-[11px] text-slate-400">Scanned from an archive storage label</p>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="hidden fixed bottom-5 right-5 left-5 sm:left-auto z-[60] bg-slate-900 text-white text-sm px-4 py-2.5 rounded-lg shadow-lg"></div>
+
+<script>
+// ======================= CONFIGURATION — paste your keys here =======================
+const SUPABASE_URL = "";       // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_ANON_KEY = "";  // your project's "anon public" API key
+const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes, e.g. "https://archive.example.com/"
+// =====================================================================================
+
+(() => {
+  // ---------- Routing check (runs first) ----------
+  // ?id=XYZ present  -> public scan view only. No id -> regular entry form + dashboard.
+  const ROUTE_PARAMS = new URLSearchParams(window.location.search);
+  const ROUTE_ID = ROUTE_PARAMS.has("id") ? (ROUTE_PARAMS.get("id") || "").trim() : null;
+  const IS_PUBLIC_VIEW = ROUTE_ID !== null;
+  document.getElementById("adminApp").hidden = IS_PUBLIC_VIEW;
+  document.getElementById("publicApp").hidden = !IS_PUBLIC_VIEW;
+  if (IS_PUBLIC_VIEW) document.title = "Archive Item · Public View";
+
+  const TABLE = "storage_items";
+  const CSV_FILENAME = "storage_archive_backup.csv";
+  const PHOTO_MAX_DIM = 800;
+  const PHOTO_QUALITY = 0.72;
+  const PHOTO_MAX_INPUT_MB = 25;
+  const ID_RE = /^ARC-[A-Z0-9]{6,20}$/;
+
+  const NOW = new Date();
+  const CUR_YEAR = NOW.getFullYear();
+  const CUR_AY = NOW.getMonth() >= 7 ? CUR_YEAR : CUR_YEAR - 1; // academic year starts around August
+  const DEFAULT_AY = `${CUR_AY}/${CUR_AY + 1}`;
+
+  const CONTACT_METHODS = {
+    "WhatsApp":     { icon: "message-circle", label: "WhatsApp number",   placeholder: "+65 9123 4567",       type: "tel",   inputmode: "tel" },
+    "Telegram":     { icon: "send",           label: "Telegram username", placeholder: "@username",           type: "text",  inputmode: "text" },
+    "Email":        { icon: "mail",           label: "Email address",     placeholder: "name@example.com",    type: "email", inputmode: "email" },
+    "Phone Number": { icon: "phone",          label: "Phone number",      placeholder: "+65 9123 4567",       type: "tel",   inputmode: "tel" },
+  };
+  const BAR_COLORS = ["bg-indigo-500", "bg-emerald-500", "bg-amber-500", "bg-sky-500", "bg-rose-500"];
+  const CHIP = "flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 transition peer-checked:bg-indigo-600 peer-checked:border-indigo-600 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500 peer-focus-visible:ring-offset-1";
+
+  // ---------- Helpers ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const icons = () => window.lucide && lucide.createIcons();
+  const fmtDate = iso => { const d = new Date(iso); return isNaN(d) ? "—" : d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" }); };
+  const photoSrc = item => (item && typeof item.photo === "string" && item.photo.startsWith("data:image/")) ? item.photo : "";
+  const titleOf = i => i.courseCode || i.courseName || i.studentName || i.id;
+  const termLabel = i => [i.academicYear, i.semester && i.semester.replace("Semester", "Sem")].filter(Boolean).join(" · ");
+  const semStyle = s => s === "Semester 1" ? "bg-indigo-50 text-indigo-700 ring-indigo-200"
+                      : s === "Semester 2" ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                      : "bg-slate-100 text-slate-600 ring-slate-200";
+  const dash = '<span class="text-slate-300">—</span>';
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.classList.remove("hidden");
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add("hidden"), 3600);
+  }
+
+  // Links built from user data are only created when the value looks valid
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const mailLink = e => !e ? "" : EMAIL_RE.test(e)
+    ? `<a href="mailto:${esc(e)}" class="text-indigo-600 hover:underline break-all">${esc(e)}</a>` : esc(e);
+  function contactLink(method, handle) {
+    const h = (handle || "").trim();
+    if (!h) return "";
+    let href = "";
+    if (method === "Email" && EMAIL_RE.test(h)) href = "mailto:" + h;
+    else if (method === "WhatsApp") { const d = h.replace(/\D/g, ""); if (d.length >= 7) href = "https://wa.me/" + d; }
+    else if (method === "Telegram") { const u = h.replace(/^@/, ""); if (/^[A-Za-z0-9_]{5,32}$/.test(u)) href = "https://t.me/" + u; }
+    else if (method === "Phone Number") { const t = h.replace(/[^\d+]/g, ""); if (t.replace(/\D/g, "").length >= 7) href = "tel:" + t; }
+    if (!href) return esc(h);
+    const ext = href.startsWith("https") ? ' target="_blank" rel="noopener noreferrer"' : "";
+    return `<a href="${esc(href)}"${ext} class="text-indigo-600 hover:underline break-all">${esc(h)}</a>`;
+  }
+
+  // ---------- Supabase (cloud database) ----------
+  const dbConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+  let db = null;
+  if (dbConfigured && window.supabase && typeof window.supabase.createClient === "function") {
+    try { db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch { db = null; }
+  }
+  const DB_NOT_READY = !dbConfigured
+    ? "Supabase isn't configured yet. Paste your SUPABASE_URL and SUPABASE_ANON_KEY at the top of the script."
+    : "The Supabase library failed to load or the keys are invalid.";
+
+  // JS (camelCase) <-> database (snake_case)
+  const fromRow = r => ({
+    id: r.id || "", academicYear: r.academic_year || "", semester: r.semester || "",
+    courseCode: r.course_code || "", courseName: r.course_name || "",
+    coordinatorName: r.coordinator_name || "", coordinatorEmail: r.coordinator_email || "",
+    tutorName: r.tutor_name || "", tutorEmail: r.tutor_email || "", tutorSame: r.tutor_same === true,
+    studentName: r.student_name || "", gradYear: r.grad_year || "",
+    contactMethod: r.contact_method || "", contactHandle: r.contact_handle || "",
+    photo: r.photo || "", createdAt: r.created_at || "",
+  });
+  const toRow = i => ({
+    id: i.id, academic_year: i.academicYear, semester: i.semester,
+    course_code: i.courseCode, course_name: i.courseName,
+    coordinator_name: i.coordinatorName, coordinator_email: i.coordinatorEmail,
+    tutor_name: i.tutorName, tutor_email: i.tutorEmail, tutor_same: i.tutorSame,
+    student_name: i.studentName, grad_year: i.gradYear,
+    contact_method: i.contactMethod, contact_handle: i.contactHandle,
+    photo: i.photo || null, created_at: i.createdAt,
+  });
+
+  async function dbFetchAll() {
+    if (!db) throw new Error(DB_NOT_READY);
+    const { data, error } = await db.from(TABLE).select("*").order("created_at", { ascending: false }).limit(1000);
+    if (error) throw error;
+    return (data || []).map(fromRow);
+  }
+  async function dbFetchOne(id) {
+    if (!db) throw new Error(DB_NOT_READY);
+    const { data, error } = await db.from(TABLE).select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? fromRow(data) : null;
+  }
+  async function dbInsert(item) {
+    if (!db) throw new Error(DB_NOT_READY);
+    const { error } = await db.from(TABLE).insert(toRow(item));
+    if (error) throw error;
+  }
+  async function dbDelete(id) {
+    if (!db) throw new Error(DB_NOT_READY);
+    const { error } = await db.from(TABLE).delete().eq("id", id);
+    if (error) throw error;
+  }
+  const errText = e => (e && (e.message || e.details)) ? String(e.message || e.details) : "Unknown error";
+
+  // ---------- Item IDs & QR link ----------
+  // IDs go into public links, so they're random (not sequential) and hard to guess
+  function genId() {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const bytes = new Uint8Array(10);
+    crypto.getRandomValues(bytes);
+    return "ARC-" + Array.from(bytes, b => alphabet[b % alphabet.length]).join("");
+  }
+
+  // The QR code encodes a full web link: <site origin>/?id=<itemId>
+  function baseUrl() {
+    if (PUBLIC_BASE_URL) return PUBLIC_BASE_URL.replace(/\/?$/, "/");
+    if (!window.location.origin || window.location.origin === "null") return "";
+    return window.location.origin + window.location.pathname.replace(/[^/]*$/, ""); // origin + "/" (folder of this page)
+  }
+  const itemLink = i => baseUrl() + "?id=" + encodeURIComponent(i.id);
+  const qrPayload = itemLink;
+
+  function makeQRCanvas(text, size = 256) {
+    for (const level of [QRCode.CorrectLevel.M, QRCode.CorrectLevel.L]) {
+      try {
+        const holder = document.createElement("div");
+        new QRCode(holder, { text, width: size, height: size, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: level });
+        const c = holder.querySelector("canvas");
+        if (c) return c;
+      } catch { /* try next level */ }
+    }
+    return null;
+  }
+  function qrDataURL(item, size = 256) {
+    const c = makeQRCanvas(qrPayload(item), size);
+    try { return c ? c.toDataURL("image/png") : ""; } catch { return ""; }
+  }
+
+  // ---------- Shared detail rendering (used by the dashboard modal AND the public view) ----------
+  const section = (title, inner) => `
+    <div>
+      <h4 class="text-[11px] font-semibold uppercase tracking-wider text-indigo-600 mb-2">${title}</h4>
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">${inner}</dl>
+    </div>`;
+  const dRow = (label, html) => `<div><dt class="text-xs uppercase tracking-wide text-slate-400">${label}</dt><dd class="mt-0.5 break-words">${html || dash}</dd></div>`;
+  const person = (name, email, extra = "") => (name || email)
+    ? `${esc(name) || dash}<div class="text-xs">${mailLink(email)}</div>${extra}` : "";
+
+  function detailSections(item) {
+    const meta = CONTACT_METHODS[item.contactMethod];
+    return [
+      section("Academic Context", dRow("Academic Year", esc(item.academicYear)) + dRow("Semester", esc(item.semester))),
+      section("Course Details",
+        dRow("Course Code", esc(item.courseCode)) + dRow("Course Name", esc(item.courseName)) +
+        dRow("Course Coordinator", person(item.coordinatorName, item.coordinatorEmail)) +
+        dRow("Tutor", person(item.tutorName, item.tutorEmail, item.tutorSame ? '<div class="text-[11px] text-slate-400">Same as course coordinator</div>' : ""))),
+      section("Student Details",
+        dRow("Student Name", esc(item.studentName)) + dRow("Graduation Year", esc(item.gradYear)) +
+        dRow("Preferred Contact", item.contactMethod
+          ? `<span class="inline-flex items-center gap-1.5 text-xs text-slate-500">${meta ? `<i data-lucide="${meta.icon}" class="h-3.5 w-3.5"></i>` : ""}${esc(item.contactMethod)}</span><div>${contactLink(item.contactMethod, item.contactHandle)}</div>` : "")),
+    ].join("");
+  }
+  function photoBlock(item, heightClass) {
+    const src = photoSrc(item);
+    return src
+      ? `<img src="${esc(src)}" alt="Photo of ${esc(titleOf(item))}" class="w-full ${heightClass} object-contain" />`
+      : `<div class="flex flex-col items-center gap-1 text-slate-300 py-8"><i data-lucide="image" class="h-10 w-10"></i><span class="text-xs">No photo added</span></div>`;
+  }
+
+  // ---------- Public scan view ----------
+  async function bootPublic() {
+    const box = $("publicBody");
+    const message = (icon, color, title, sub) => {
+      box.innerHTML = `<div class="p-10 text-center">
+        <div class="mx-auto h-14 w-14 rounded-full ${color} flex items-center justify-center mb-3"><i data-lucide="${icon}" class="h-7 w-7"></i></div>
+        <p class="font-semibold">${esc(title)}</p><p class="mt-1 text-sm text-slate-500">${esc(sub)}</p></div>`;
+      icons();
+    };
+    box.innerHTML = `<div class="p-12 text-center text-sm text-slate-500"><div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin"></div>Loading item…</div>`;
+
+    const id = ROUTE_ID.toUpperCase();
+    if (!ID_RE.test(id)) return message("search-x", "bg-slate-100 text-slate-400", "Item not found", "This link doesn't look like a valid archive label.");
+    let item;
+    try { item = await dbFetchOne(id); }
+    catch (e) { return message("cloud-off", "bg-amber-50 text-amber-600", "Couldn't load this item", dbConfigured ? "Please check your connection and try again." : DB_NOT_READY); }
+    if (!item) return message("search-x", "bg-slate-100 text-slate-400", "Item not found", "No archive entry matches this label. It may have been removed.");
+
+    document.title = titleOf(item) + " · Archive Item";
+    box.innerHTML = `
+      <div class="bg-slate-50 border-b border-slate-200 flex items-center justify-center">${photoBlock(item, "max-h-80")}</div>
+      <div class="p-5 sm:p-7 space-y-6">
+        <div>
+          ${item.academicYear || item.semester ? `<span class="text-[11px] px-2 py-0.5 rounded-full ring-1 ring-inset ${semStyle(item.semester)}">${esc(termLabel(item))}</span>` : ""}
+          <h1 class="mt-2 text-2xl font-semibold break-words">${esc(titleOf(item))}</h1>
+          ${item.courseCode && item.courseName ? `<p class="text-sm text-slate-500 break-words">${esc(item.courseName)}</p>` : ""}
+        </div>
+        ${detailSections(item)}
+        <div class="pt-4 border-t border-slate-100 text-xs text-slate-400 flex flex-wrap justify-between gap-2">
+          <span class="font-mono">${esc(item.id)}</span>
+          <span>Archived ${esc(fmtDate(item.createdAt))}</span>
+        </div>
+      </div>`;
+    icons();
+  }
+
+  // ======================= MANAGER (entry form + dashboard) =======================
+  let items = [];
+  let query = "", yearFilter = "", semFilter = "";
+  let pendingPhoto = "";
+  let photoJob = 0;
+  let processingPhoto = false;
+  let saving = false;
+
+  // ---------- Form setup ----------
+  function fillSelect(sel, values, placeholder) {
+    sel.innerHTML = `<option value="" disabled selected>${esc(placeholder)}</option>` +
+      values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+  }
+  function buildChips(containerId, name, options) {
+    $(containerId).innerHTML = options.map(o => `
+      <label class="cursor-pointer">
+        <input type="radio" name="${name}" value="${esc(o.value)}" class="peer sr-only" required />
+        <span class="${CHIP}">${o.icon ? `<i data-lucide="${o.icon}" class="h-4 w-4"></i>` : ""}${esc(o.value)}</span>
+      </label>`).join("");
+  }
+  const checkedValue = name => { const r = document.querySelector(`input[name="${name}"]:checked`); return r ? r.value : ""; };
+
+  function initFormControls() {
+    const ay = []; for (let y = CUR_YEAR - 3; y <= CUR_YEAR + 5; y++) ay.push(`${y}/${y + 1}`);
+    fillSelect($("academicYear"), ay, "Select academic year");
+    const gy = []; for (let y = CUR_YEAR - 3; y <= CUR_YEAR + 8; y++) gy.push(String(y));
+    fillSelect($("gradYear"), gy, "Select graduation year");
+    buildChips("semesterChips", "semester", [{ value: "Semester 1" }, { value: "Semester 2" }]);
+    buildChips("contactMethods", "contactMethod", Object.keys(CONTACT_METHODS).map(k => ({ value: k, icon: CONTACT_METHODS[k].icon })));
+    $("academicYear").value = DEFAULT_AY;
+    applyTutorSame();
+    applyContactMethod();
+  }
+
+  function applyTutorSame() {
+    const same = $("tutorSame").checked;
+    $("tutorFields").classList.toggle("hidden", same);
+    $("tutorSameNote").classList.toggle("hidden", !same);
+    $("tutorName").required = !same;
+    $("tutorEmail").required = !same;
+  }
+
+  const phoneOk = v => /^[+()\d\s-]+$/.test(v) && v.replace(/\D/g, "").length >= 7 && v.replace(/\D/g, "").length <= 15;
+  function validateContact() {
+    const el = $("contactHandle"), v = el.value.trim(), m = checkedValue("contactMethod");
+    let msg = "";
+    if (v) {
+      if ((m === "WhatsApp" || m === "Phone Number") && !phoneOk(v)) msg = "Enter a valid phone number with country code, e.g. +65 9123 4567";
+      else if (m === "Telegram" && !/^@?[A-Za-z0-9_]{5,32}$/.test(v) && !phoneOk(v)) msg = "Enter a Telegram @username (5-32 letters, numbers or underscores) or a phone number";
+    }
+    el.setCustomValidity(msg);
+  }
+  function applyContactMethod() {
+    const meta = CONTACT_METHODS[checkedValue("contactMethod")];
+    const el = $("contactHandle");
+    $("contactLabel").textContent = meta ? meta.label : "Contact handle / number / email";
+    el.placeholder = meta ? meta.placeholder : "Select a preferred method first";
+    el.type = meta ? meta.type : "text";
+    el.inputMode = meta ? meta.inputmode : "text";
+    validateContact();
+  }
+
+  function resetForm() {
+    $("itemForm").reset();
+    clearPhoto();
+    $("academicYear").value = DEFAULT_AY;
+    applyTutorSame();
+    applyContactMethod();
+  }
+
+  // ---------- Photo handling ----------
+  function readAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error("read failed"));
+      reader.readAsDataURL(file);
+    });
+  }
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("decode failed"));
+      img.src = src;
+    });
+  }
+  // Downscale + recompress as JPEG (Base64) so it stays small in the database
+  async function fileToCompressedBase64(file) {
+    const original = await readAsDataURL(file);
+    const img = await loadImage(original);
+    const scale = Math.min(1, PHOTO_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const g = canvas.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0, 0, w, h);
+    g.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL("image/jpeg", PHOTO_QUALITY);
+  }
+  function refreshSubmit() {
+    const busy = processingPhoto || saving;
+    $("submitBtn").disabled = busy;
+    $("submitLabel").textContent = saving ? "Saving to cloud…" : processingPhoto ? "Processing photo…" : "Save & Generate QR";
+  }
+  function showPhotoPreview(name, dataUrl) {
+    const kb = Math.round(dataUrl.length * 0.75 / 1024);
+    $("photoPreview").src = dataUrl;
+    $("photoMeta").textContent = `${name} · optimized to ~${kb} KB`;
+    $("photoDrop").classList.add("hidden");
+    $("photoPreviewWrap").classList.remove("hidden");
+    $("photoPreviewWrap").classList.add("flex");
+  }
+  function clearPhoto() {
+    photoJob++;
+    pendingPhoto = "";
+    $("photo").value = "";
+    $("photoPreview").removeAttribute("src");
+    $("photoMeta").textContent = "";
+    $("photoPreviewWrap").classList.add("hidden");
+    $("photoPreviewWrap").classList.remove("flex");
+    $("photoDrop").classList.remove("hidden");
+    processingPhoto = false; refreshSubmit();
+  }
+
+  // ---------- CSV Export ----------
+  // Every field is quoted with inner quotes doubled (RFC 4180). Text starting with = + - @ gets an
+  // apostrophe prefix so Excel treats it as text instead of running it as a formula.
+  function csvCell(value) {
+    let s = String(value ?? "");
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  // Phone numbers and @handles are written as ="value" so Excel keeps them exactly as typed
+  function csvContact(value) {
+    const s = String(value ?? "").trim();
+    if (/^[+@][A-Za-z0-9_ ()\-.]+$/.test(s) || /^[0-9][0-9 ()\-]*$/.test(s)) return '"=""' + s + '"""';
+    return csvCell(s);
+  }
+  function csvDate(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    const p = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  }
+
+  async function exportCSV() {
+    let data;
+    try { data = await dbFetchAll(); } // always export the latest cloud data
+    catch (e) { toast("Couldn't load data for export: " + errText(e)); return; }
+    if (!data.length) { toast("Nothing to export yet — add an item first"); return; }
+
+    const header = ["Item ID", "Academic Year", "Semester", "Course Code", "Course Name",
+      "Course Coordinator Name", "Course Coordinator Email", "Tutor Name", "Tutor Email",
+      "Student Name", "Student Graduation Year", "Preferred Contact Method", "Contact Handle / Number / Email", "Date Added", "Label Link"];
+
+    // Columns are listed one by one, so the Base64 `photo` field is never exported
+    const rows = data.map(i => {
+      const cells = [i.id, i.academicYear, i.semester, i.courseCode, i.courseName,
+        i.coordinatorName, i.coordinatorEmail, i.tutorName, i.tutorEmail,
+        i.studentName, i.gradYear, i.contactMethod].map(csvCell);
+      cells.push(csvContact(i.contactHandle));
+      cells.push(csvCell(csvDate(i.createdAt)));
+      cells.push(csvCell(itemLink(i)));
+      return cells.join(",");
+    });
+    const csv = [header.map(csvCell).join(","), ...rows].join("\r\n");
+
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = CSV_FILENAME;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(`Exported ${data.length} item${data.length === 1 ? "" : "s"} to CSV`);
+  }
+
+  // ---------- Dashboard rendering ----------
+  function setDbStatus(ok, text) {
+    $("dbDot").className = "h-2 w-2 rounded-full " + (ok ? "bg-emerald-500" : "bg-rose-400");
+    $("dbStatusText").textContent = text;
+  }
+  function showBanner(html) {
+    $("dbBanner").hidden = !html;
+    $("dbBannerText").innerHTML = html || "";
+  }
+
+  function renderSummary() {
+    $("totalCount").textContent = items.length;
+    $("lastAdded").textContent = items.length ? "Last added " + fmtDate(items[0].createdAt) : "No items yet";
+
+    const cc = {};
+    items.forEach(i => { const k = (i.courseCode || i.courseName || "").trim().toUpperCase(); if (k) cc[k] = (cc[k] || 0) + 1; });
+    const ck = Object.keys(cc).sort((a, b) => cc[b] - cc[a]);
+    $("courseCount").textContent = ck.length;
+    $("topCourse").textContent = ck.length ? `Most items: ${ck[0]} (${cc[ck[0]]})` : "—";
+
+    const tc = {};
+    items.forEach(i => { const k = termLabel(i) || "Unassigned"; tc[k] = (tc[k] || 0) + 1; });
+    const te = Object.entries(tc).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    $("termBreakdown").innerHTML = te.length ? te.map(([k, n], idx) => `
+      <div>
+        <div class="flex justify-between text-xs mb-1"><span class="text-slate-600">${esc(k)}</span><span class="font-medium">${n}</span></div>
+        <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden"><div class="h-full ${BAR_COLORS[idx % BAR_COLORS.length]}" style="width:${(n / items.length) * 100}%"></div></div>
+      </div>`).join("") : `<p class="text-xs text-slate-400">No terms yet</p>`;
+
+    const years = [...new Set(items.map(i => i.academicYear).filter(Boolean))].sort().reverse();
+    if (yearFilter && !years.includes(yearFilter)) yearFilter = "";
+    $("filterYear").innerHTML = `<option value="">All years</option>` +
+      years.map(y => `<option value="${esc(y)}" ${y === yearFilter ? "selected" : ""}>${esc(y)}</option>`).join("");
+  }
+
+  const haystack = i => [i.id, i.academicYear, i.semester, i.courseCode, i.courseName, i.coordinatorName, i.coordinatorEmail,
+    i.tutorName, i.tutorEmail, i.studentName, i.gradYear, i.contactMethod, i.contactHandle].join(" ").toLowerCase();
+
+  function filtered() {
+    const q = query.trim().toLowerCase();
+    return items.filter(i =>
+      (!yearFilter || i.academicYear === yearFilter) &&
+      (!semFilter || i.semester === semFilter) &&
+      (!q || haystack(i).includes(q)));
+  }
+
+  function personCell(name, email, note = "") {
+    if (!name && !email) return dash;
+    return `<div class="max-w-[13rem] truncate">${esc(name) || dash}</div>
+            <div class="max-w-[13rem] truncate text-xs text-slate-500">${esc(email)}</div>${note}`;
+  }
+
+  function rowHTML(i) {
+    const src = photoSrc(i);
+    const meta = CONTACT_METHODS[i.contactMethod];
+    return `
+    <tr data-id="${esc(i.id)}" tabindex="0" class="row cursor-pointer hover:bg-indigo-50/40 focus:outline-none focus:bg-indigo-50/70 transition">
+      <td class="px-4 py-3">
+        <div class="h-12 w-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-300">
+          ${src ? `<img src="${esc(src)}" alt="Photo of ${esc(titleOf(i))}" loading="lazy" class="h-full w-full object-cover" />` : `<i data-lucide="image" class="h-5 w-5"></i>`}
+        </div>
+      </td>
+      <td class="px-4 py-3">
+        <div class="font-medium max-w-[15rem] truncate">${esc(i.courseCode) || esc(i.courseName) || dash}</div>
+        ${i.courseCode && i.courseName ? `<div class="max-w-[15rem] truncate text-xs text-slate-500">${esc(i.courseName)}</div>` : ""}
+        <div class="text-[11px] font-mono text-slate-400">${esc(i.id)}</div>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap">
+        <div>${esc(i.academicYear) || dash}</div>
+        ${i.semester ? `<span class="mt-1 inline-block text-[11px] px-2 py-0.5 rounded-full ring-1 ring-inset ${semStyle(i.semester)}">${esc(i.semester)}</span>` : ""}
+      </td>
+      <td class="px-4 py-3">${personCell(i.coordinatorName, i.coordinatorEmail)}</td>
+      <td class="px-4 py-3">${personCell(i.tutorName, i.tutorEmail, i.tutorSame ? '<div class="text-[11px] text-slate-400">Same as coordinator</div>' : "")}</td>
+      <td class="px-4 py-3">
+        <div class="max-w-[12rem] truncate">${esc(i.studentName) || dash}</div>
+        ${i.gradYear ? `<div class="text-xs text-slate-500">Class of ${esc(i.gradYear)}</div>` : ""}
+      </td>
+      <td class="px-4 py-3">
+        ${meta ? `<span class="inline-flex items-center gap-1 text-xs font-medium text-slate-600"><i data-lucide="${meta.icon}" class="h-3.5 w-3.5"></i>${esc(i.contactMethod)}</span>
+        <div class="max-w-[12rem] truncate text-xs font-mono text-slate-500">${esc(i.contactHandle)}</div>` : dash}
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap text-xs text-slate-500">${fmtDate(i.createdAt)}</td>
+    </tr>`;
+  }
+
+  function renderGrid() {
+    const list = filtered();
+    $("resultCount").textContent = items.length ? `· ${list.length} of ${items.length}` : "";
+    $("tableWrap").classList.toggle("hidden", list.length === 0);
+    $("empty").classList.toggle("hidden", list.length !== 0);
+    if (!list.length) {
+      $("emptyTitle").textContent = items.length ? "No matching items" : "No items yet";
+      $("emptySub").textContent = items.length ? "Try a different search or filter." : "Add your first item to generate its QR label.";
+      $("emptyAddBtn").classList.toggle("hidden", items.length > 0);
+    }
+    $("rows").innerHTML = list.map(rowHTML).join("");
+    icons();
+  }
+
+  function render() { renderSummary(); renderGrid(); icons(); }
+
+  async function loadItems(showSpinner = true) {
+    if (!db) {
+      setDbStatus(false, "Cloud database: not connected");
+      showBanner(`<strong>Cloud database not connected.</strong> ${esc(DB_NOT_READY)}`);
+      render();
+      return false;
+    }
+    if (showSpinner) { $("loading").classList.remove("hidden"); $("tableWrap").classList.add("hidden"); $("empty").classList.add("hidden"); }
+    try {
+      items = await dbFetchAll();
+      setDbStatus(true, "Cloud database: connected (Supabase)");
+      showBanner("");
+      return true;
+    } catch (e) {
+      setDbStatus(false, "Cloud database: error");
+      showBanner(`<strong>Couldn't load items.</strong> ${esc(errText(e))}. Check that you've run the SQL setup and that your policies allow access.`);
+      return false;
+    } finally {
+      $("loading").classList.add("hidden");
+      render();
+    }
+  }
+
+  // ---------- Modals ----------
+  function syncScrollLock() {
+    const open = !$("modal").classList.contains("hidden") || !$("formModal").classList.contains("hidden");
+    document.body.style.overflow = open ? "hidden" : "";
+  }
+  function openForm() {
+    $("formModal").classList.remove("hidden");
+    syncScrollLock(); icons();
+    setTimeout(() => $("academicYear").focus(), 50);
+  }
+  function closeForm() { $("formModal").classList.add("hidden"); syncScrollLock(); }
+  function closeModal() { $("modal").classList.add("hidden"); syncScrollLock(); }
+
+  function openModal(id, isNew = false) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    const qr = qrDataURL(item, 320);
+    const link = itemLink(item);
+    const noBase = !baseUrl();
+    $("modalBody").innerHTML = `
+      ${isNew ? `<div class="mb-5 mr-8 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+        <i data-lucide="check-circle-2" class="h-4 w-4"></i> Item saved to the cloud. Your QR label is ready.</div>` : ""}
+      ${noBase ? `<div class="mb-5 flex items-start gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        <i data-lucide="alert-triangle" class="h-4 w-4 shrink-0 mt-0.5"></i>
+        <span>This page is opened from a local file, so the QR link has no web address. Host the page online (or set <code>PUBLIC_BASE_URL</code>) before printing labels.</span></div>` : ""}
+      <div class="mb-6 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center ${photoSrc(item) ? "" : "h-32"}">
+        ${photoBlock(item, "max-h-72")}
+      </div>
+      <div class="flex flex-col sm:flex-row gap-6">
+        <div class="sm:w-52 shrink-0 mx-auto">
+          <div class="rounded-xl border border-slate-200 p-3 bg-white">
+            ${qr ? `<img alt="QR code for ${esc(titleOf(item))}" class="w-full h-auto" src="${qr}" />`
+                 : `<p class="text-xs text-slate-400 text-center py-10">QR code unavailable</p>`}
+          </div>
+          <p class="mt-2 text-center font-mono text-xs text-slate-500">${esc(item.id)}</p>
+          ${noBase ? "" : `<a href="${esc(link)}" target="_blank" rel="noopener" class="mt-1 block text-center text-[11px] text-indigo-600 hover:underline break-all">Open public link</a>`}
+        </div>
+        <div class="flex-1 min-w-0 space-y-5">
+          <div>
+            ${item.semester || item.academicYear ? `<span class="text-[11px] px-2 py-0.5 rounded-full ring-1 ring-inset ${semStyle(item.semester)}">${esc(termLabel(item))}</span>` : ""}
+            <h3 class="mt-2 text-xl font-semibold break-words">${esc(titleOf(item))}</h3>
+            ${item.courseCode && item.courseName ? `<p class="text-sm text-slate-500 break-words">${esc(item.courseName)}</p>` : ""}
+          </div>
+          ${detailSections(item)}
+          <p class="text-xs text-slate-400">Archived on ${esc(new Date(item.createdAt).toLocaleString())}</p>
+        </div>
+      </div>
+      <div class="mt-6 pt-5 border-t border-slate-100 flex flex-wrap gap-2 justify-between">
+        <button id="delBtn" class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-rose-600 hover:bg-rose-50">
+          <i data-lucide="trash-2" class="h-4 w-4"></i> Delete</button>
+        <div class="flex gap-2">
+          <button id="dlBtn" class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">
+            <i data-lucide="download" class="h-4 w-4"></i> Download Label</button>
+          <button id="printBtn" class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
+            <i data-lucide="printer" class="h-4 w-4"></i> Print Label</button>
+        </div>
+      </div>`;
+    $("modal").classList.remove("hidden");
+    syncScrollLock();
+    icons();
+    $("dlBtn").onclick = () => downloadLabel(item);
+    $("printBtn").onclick = () => printLabel(item);
+    $("delBtn").onclick = async () => {
+      if (!confirm(`Delete "${titleOf(item)}"${item.studentName ? " (" + item.studentName + ")" : ""}? This cannot be undone and the printed QR label will stop working.`)) return;
+      const btn = $("delBtn"); btn.disabled = true;
+      try {
+        await dbDelete(item.id);
+        items = items.filter(i => i.id !== item.id);
+        closeModal(); render(); toast("Item deleted");
+      } catch (e) { btn.disabled = false; toast("Couldn't delete: " + errText(e)); }
+    };
+  }
+
+  // ---------- Label (QR + text) ----------
+  function buildLabelCanvas(item) {
+    const W = 600, H = 360, qrSize = 280, maxW = 244, x = 332;
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    g.strokeStyle = "#0f172a"; g.lineWidth = 4; g.strokeRect(6, 6, W - 12, H - 12);
+    const qr = makeQRCanvas(qrPayload(item), qrSize);
+    if (qr) g.drawImage(qr, 28, (H - qrSize) / 2, qrSize, qrSize);
+
+    const fit = (text, w) => {
+      if (g.measureText(text).width <= w) return text;
+      let t = text;
+      while (t.length > 1 && g.measureText(t + "…").width > w) t = t.slice(0, -1);
+      return t + "…";
+    };
+    let y = 66;
+    g.fillStyle = "#64748b"; g.font = "600 14px sans-serif"; g.fillText("ARCHIVE ITEM · SCAN FOR DETAILS", x, y); y += 42;
+    g.fillStyle = "#0f172a"; g.font = "700 30px sans-serif"; g.fillText(fit(item.courseCode || item.courseName || "Item", maxW), x, y); y += 26;
+    if (item.courseCode && item.courseName) {
+      g.fillStyle = "#475569"; g.font = "500 16px sans-serif"; g.fillText(fit(item.courseName, maxW), x, y);
+    }
+    y += 40;
+    g.fillStyle = "#0f172a"; g.font = "600 20px sans-serif"; g.fillText(fit(item.studentName || "—", maxW), x, y); y += 26;
+    g.fillStyle = "#475569"; g.font = "500 16px sans-serif";
+    if (item.gradYear) { g.fillText("Class of " + item.gradYear, x, y); y += 24; }
+    const term = [item.academicYear, item.semester].filter(Boolean).join(" · ");
+    if (term) { g.fillText(fit(term, maxW), x, y); }
+    g.font = "600 18px monospace"; g.fillStyle = "#4f46e5"; g.fillText(item.id, x, H - 40);
+    return c;
+  }
+  function downloadLabel(item) {
+    const a = document.createElement("a");
+    a.href = buildLabelCanvas(item).toDataURL("image/png");
+    a.download = `label-${item.id}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  function printLabel(item) {
+    const url = buildLabelCanvas(item).toDataURL("image/png");
+    const w = window.open("", "_blank", "width=700,height=500");
+    if (!w) { toast("Pop-up blocked — allow pop-ups to print"); return; }
+    w.document.write(`<!DOCTYPE html><html><head><title>Label ${esc(item.id)}</title>
+      <style>@page{margin:10mm}body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh}
+      img{width:100mm;max-width:100%;height:auto}</style></head>
+      <body><img src="${url}" onload="setTimeout(()=>{window.print();},150)" /></body></html>`);
+    w.document.close();
+  }
+
+  // ---------- Events (manager) ----------
+  function bindManagerEvents() {
+    document.querySelectorAll("[data-open-form]").forEach(b => b.addEventListener("click", openForm));
+    $("formClose").addEventListener("click", closeForm);
+    $("formCancel").addEventListener("click", closeForm);
+    $("formBackdrop").addEventListener("click", closeForm); // closing keeps what you typed
+    $("formClear").addEventListener("click", () => { resetForm(); toast("Form cleared"); });
+
+    $("tutorSame").addEventListener("change", applyTutorSame);
+    $("contactMethods").addEventListener("change", applyContactMethod);
+    $("contactHandle").addEventListener("input", validateContact);
+
+    $("photo").addEventListener("change", async e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) { toast("Please choose an image file"); e.target.value = ""; return; }
+      if (file.size > PHOTO_MAX_INPUT_MB * 1024 * 1024) { toast(`That image is too large (max ${PHOTO_MAX_INPUT_MB} MB)`); e.target.value = ""; return; }
+      const job = ++photoJob;
+      processingPhoto = true; refreshSubmit();
+      try {
+        const dataUrl = await fileToCompressedBase64(file);
+        if (job !== photoJob) return;
+        pendingPhoto = dataUrl;
+        showPhotoPreview(file.name, dataUrl);
+      } catch {
+        if (job !== photoJob) return;
+        clearPhoto();
+        toast("Couldn't read that image. Try a JPG, PNG or WebP file.");
+      } finally {
+        if (job === photoJob) { processingPhoto = false; refreshSubmit(); }
+      }
+    });
+    $("photoRemove").addEventListener("click", clearPhoto);
+
+    $("itemForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (saving) return;
+      if (processingPhoto) { toast("Photo is still processing — one moment"); return; }
+      if (!db) { toast(DB_NOT_READY); return; }
+      const same = $("tutorSame").checked;
+      const coordinatorName = $("coordinatorName").value.trim();
+      const coordinatorEmail = $("coordinatorEmail").value.trim();
+      const item = {
+        id: genId(),
+        academicYear: $("academicYear").value,
+        semester: checkedValue("semester"),
+        courseCode: $("courseCode").value.trim(),
+        courseName: $("courseName").value.trim(),
+        coordinatorName,
+        coordinatorEmail,
+        tutorSame: same,
+        tutorName: same ? coordinatorName : $("tutorName").value.trim(),
+        tutorEmail: same ? coordinatorEmail : $("tutorEmail").value.trim(),
+        studentName: $("studentName").value.trim(),
+        gradYear: $("gradYear").value,
+        contactMethod: checkedValue("contactMethod"),
+        contactHandle: $("contactHandle").value.trim(),
+        photo: pendingPhoto,
+        createdAt: new Date().toISOString(),
+      };
+
+      saving = true; refreshSubmit();
+      try {
+        await dbInsert(item);
+      } catch (err) {
+        saving = false; refreshSubmit();
+        toast("Couldn't save to the cloud: " + errText(err)); // form stays filled in
+        return;
+      }
+      saving = false; refreshSubmit();
+      items.unshift(item);
+      resetForm(); closeForm(); render(); openModal(item.id, true);
+    });
+
+    $("search").addEventListener("input", e => { query = e.target.value; renderGrid(); });
+    $("filterYear").addEventListener("change", e => { yearFilter = e.target.value; renderGrid(); });
+    $("filterSemester").addEventListener("change", e => { semFilter = e.target.value; renderGrid(); });
+    $("refreshBtn").addEventListener("click", async () => { if (await loadItems(true)) toast("Dashboard refreshed"); });
+    $("rows").addEventListener("click", e => { const r = e.target.closest("tr[data-id]"); if (r) openModal(r.dataset.id); });
+    $("rows").addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { const r = e.target.closest("tr[data-id]"); if (r) { e.preventDefault(); openModal(r.dataset.id); } }
+    });
+    $("modalClose").addEventListener("click", closeModal);
+    $("modalBackdrop").addEventListener("click", closeModal);
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Escape") return;
+      if (!$("modal").classList.contains("hidden")) closeModal();
+      else if (!$("formModal").classList.contains("hidden")) closeForm();
+    });
+    $("exportCsvBtn").addEventListener("click", exportCSV);
+    $("exportBtn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(items.map(i => ({ ...i, photo: undefined })), null, 2)], { type: "application/json" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+      a.download = `archive-export-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+  }
+
+  async function bootDashboard() {
+    bindManagerEvents();
+    initFormControls();
+    render();
+    await loadItems(true);
+  }
+
+  // ---------- Init ----------
+  if (IS_PUBLIC_VIEW) bootPublic(); else bootDashboard();
+})();
+</script>
+</body>
+</html>
