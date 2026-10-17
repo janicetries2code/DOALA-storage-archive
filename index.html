@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>LA Storage & Archival Dashboard</title>
+<title>Storage & Archival Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -127,7 +127,7 @@
     </div>
 
     <div id="tableWrap" class="overflow-x-auto">
-      <table class="w-full min-w-[1040px] text-sm text-left">
+      <table class="w-full min-w-[1240px] text-sm text-left">
         <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200">
           <tr>
             <th class="px-4 py-3 font-semibold">Photo</th>
@@ -136,6 +136,7 @@
             <th class="px-4 py-3 font-semibold">Course Coordinator</th>
             <th class="px-4 py-3 font-semibold">Tutor</th>
             <th class="px-4 py-3 font-semibold">Student</th>
+            <th class="px-4 py-3 font-semibold">Project</th>
             <th class="px-4 py-3 font-semibold">Preferred Contact</th>
             <th class="px-4 py-3 font-semibold">Added</th>
           </tr>
@@ -164,7 +165,7 @@
     <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-200">
       <div>
         <h2 id="formTitle" class="text-base font-semibold flex items-center gap-2">
-          <i data-lucide="plus-circle" class="h-5 w-5 text-indigo-600"></i> Store New Item
+          <i data-lucide="plus-circle" class="h-5 w-5 text-indigo-600"></i> Archive New Item
         </h2>
         <p class="text-xs text-slate-500 mt-0.5">A unique ID and a scannable QR link label are generated automatically. Fields marked <span class="text-rose-500">*</span> are required.</p>
       </div>
@@ -202,21 +203,21 @@
         <div class="grid grid-cols-1 sm:grid-cols-6 gap-4">
           <div class="sm:col-span-2">
             <label class="lbl" for="courseCode">Course Code <span class="text-rose-500">*</span></label>
-            <input id="courseCode" required maxlength="20" placeholder="e.g. LAD1001A" class="field" />
+            <input id="courseCode" required maxlength="20" placeholder="e.g. CS1010" class="field" />
           </div>
           <div class="sm:col-span-4">
             <label class="lbl" for="courseName">Course Name <span class="text-rose-500">*</span></label>
-            <input id="courseName" required maxlength="100" placeholder="e.g. Design 1" class="field" />
+            <input id="courseName" required maxlength="100" placeholder="e.g. Programming Methodology" class="field" />
           </div>
 
           <p class="sm:col-span-6 -mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Course Coordinator</p>
           <div class="sm:col-span-3">
             <label class="lbl" for="coordinatorName">Name <span class="text-rose-500">*</span></label>
-            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. John Tan" class="field" />
+            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. Jane Tan" class="field" />
           </div>
           <div class="sm:col-span-3">
             <label class="lbl" for="coordinatorEmail">Email <span class="text-rose-500">*</span></label>
-            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@nus.edu.sg" class="field" />
+            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@university.edu" class="field" />
           </div>
 
           <div class="sm:col-span-6 -mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -235,7 +236,7 @@
               </div>
               <div>
                 <label class="lbl" for="tutorEmail">Email <span class="text-rose-500">*</span></label>
-                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@nus.edu.sg" class="field" />
+                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@university.edu" class="field" />
               </div>
             </div>
           </div>
@@ -255,6 +256,10 @@
           <div>
             <label class="lbl" for="studentName">Student Name <span class="text-rose-500">*</span></label>
             <input id="studentName" required maxlength="80" placeholder="e.g. Marcus Ong" class="field" />
+          </div>
+          <div>
+            <label class="lbl" for="studentId">Student ID <span class="text-rose-500">*</span></label>
+            <input id="studentId" required maxlength="9" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="e.g. A0123456B" class="field font-mono uppercase placeholder:normal-case" />
           </div>
           <div>
             <label class="lbl" for="gradYear">Graduation Year <span class="text-rose-500">*</span></label>
@@ -277,8 +282,22 @@
           <span class="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><i data-lucide="camera" class="h-4 w-4"></i></span>
           <h3 class="text-sm font-semibold">4. Archival Details</h3>
         </div>
-        <span class="lbl">Photo of Storage Item <span class="text-slate-400 font-normal"></span></span>
-        <input id="photo" type="file" accept="image/*" class="sr-only peer" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+          <div>
+            <label class="lbl" for="projectName">Project Name <span class="text-rose-500">*</span></label>
+            <input id="projectName" required maxlength="120" placeholder="e.g. Smart Irrigation Prototype" class="field" />
+          </div>
+          <div>
+            <label class="lbl" for="projectLocation">Project Location <span class="text-rose-500">*</span></label>
+            <input id="projectLocation" required maxlength="120" placeholder="e.g. Store Room B, Level 2, Shelf 4" class="field" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="lbl" for="keywords">Keywords <span class="text-slate-400 font-normal">(optional)</span></label>
+            <input id="keywords" maxlength="200" placeholder="Separate with commas, e.g. robotics, sensors, IoT" class="field" />
+          </div>
+        </div>
+        <span class="lbl">Photo of Storage Item <span class="text-rose-500">*</span></span>
+        <input id="photo" type="file" accept="image/*" required class="sr-only peer" />
         <label id="photoDrop" for="photo"
           class="flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-indigo-400 cursor-pointer px-3 py-6 text-center transition peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500">
           <i data-lucide="camera" class="h-6 w-6 text-slate-400"></i>
@@ -334,8 +353,62 @@
         <label class="lbl" for="loginPassword">Password</label>
         <input id="loginPassword" type="password" required autocomplete="current-password" class="field" />
       </div>
+      <p id="loginNotice" class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2" hidden role="status"></p>
       <p id="loginError" class="text-sm text-rose-600 min-h-[1.25rem]" role="alert"></p>
       <button id="loginBtn" type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm transition">Sign in</button>
+      <button id="forgotLink" type="button" class="w-full text-center text-sm text-indigo-600 hover:underline">Forgot sign in?</button>
+    </form>
+
+    <!-- Forgot sign in: request a recovery link -->
+    <form id="forgotForm" hidden class="w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm"><i data-lucide="key-round" class="h-5 w-5"></i></div>
+        <div>
+          <h1 class="text-lg font-semibold leading-tight">Forgot sign in</h1>
+          <p class="text-xs text-slate-500">We'll email you a secure recovery link</p>
+        </div>
+      </div>
+      <div>
+        <span class="lbl">What do you want to reset?</span>
+        <div id="resetTargets" class="grid grid-cols-3 gap-2"></div>
+      </div>
+      <div>
+        <label class="lbl" for="forgotEmail">Your current sign-in email</label>
+        <input id="forgotEmail" type="email" required autocomplete="username" placeholder="you@university.edu" class="field" />
+        <p id="forgotHelp" class="mt-1.5 text-[11px] text-slate-400">Can't remember which email you used? Ask the person who set up your account.</p>
+      </div>
+      <p id="forgotMsg" class="text-sm min-h-[1.25rem]" role="status"></p>
+      <button id="forgotBtn" type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm transition">Send recovery link</button>
+      <button id="forgotBack" type="button" class="w-full text-center text-sm text-slate-500 hover:underline">Back to sign in</button>
+    </form>
+
+    <!-- Opened from the emailed recovery link: choose a new password and/or email -->
+    <form id="resetForm" hidden class="w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm"><i data-lucide="shield-check" class="h-5 w-5"></i></div>
+        <div>
+          <h1 class="text-lg font-semibold leading-tight">Update sign in</h1>
+          <p class="text-xs text-slate-500">Your recovery link was verified</p>
+        </div>
+      </div>
+      <div id="resetEmailFields">
+        <label class="lbl" for="newEmail">New sign-in email</label>
+        <input id="newEmail" type="email" autocomplete="email" placeholder="new-address@university.edu" class="field" />
+        <p class="mt-1.5 text-[11px] text-slate-400">A confirmation link will be sent to the new address. Use the old one until you confirm it.</p>
+      </div>
+      <div id="resetPasswordFields" class="space-y-4">
+        <div>
+          <label class="lbl" for="newPassword">New password</label>
+          <input id="newPassword" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" class="field" />
+        </div>
+        <div>
+          <label class="lbl" for="newPassword2">Confirm new password</label>
+          <input id="newPassword2" type="password" minlength="8" autocomplete="new-password" class="field" />
+        </div>
+      </div>
+      <p id="resetMsg" class="text-sm text-rose-600 min-h-[1.25rem]" role="alert"></p>
+      <button id="resetBtn" type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm transition">Save changes</button>
+      <button id="resetCancel" type="button" class="w-full text-center text-sm text-slate-500 hover:underline">Cancel</button>
     </form>
   </div>
 </div>
@@ -348,7 +421,7 @@
     <div class="flex items-center gap-3 mb-5">
       <div class="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm"><i data-lucide="archive" class="h-5 w-5"></i></div>
       <div>
-        <h1 class="text-lg font-semibold leading-tight">LA Archive Item Submission</h1>
+        <h1 class="text-lg font-semibold leading-tight">Archive Item Submission</h1>
         <p class="text-xs text-slate-500">Register an archived item and get its scannable QR label</p>
       </div>
     </div>
@@ -387,14 +460,16 @@
 
 <script>
 // ======================= CONFIGURATION — paste your keys here =======================
-const SUPABASE_URL = "https://bnszdnxzpqicknwkrwrh.supabase.co";       // e.g. "https://abcdxyz.supabase.co"
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuc3pkbnh6cHFpY2tud2tyd3JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNjg1MTQsImV4cCI6MjEwNzc0NDUxNH0.3JUagPMmVSxZ91xROQ74ArNjko24NtPpT_Gfh3phF4Y";  // your project's "anon public" API key
+const SUPABASE_URL = "";       // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_ANON_KEY = "";  // your project's "anon public" API key
 const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes, e.g. "https://archive.example.com/"
+// Reset links return to this page. In Supabase → Authentication → URL Configuration, add your site URL
+// (e.g. https://archive.example.com/**) to "Redirect URLs" or recovery emails will be rejected.
 // =====================================================================================
 
 (() => {
   // ---------- Routing check (runs first) ----------
-  //   /            -> public "Store New Item" form only
+  //   /            -> public "Archive New Item" form only
   //   /?id=XYZ     -> public scan view of one item
   //   /?manage     -> manager login, then the dashboard (requires a Supabase account)
   const ROUTE_PARAMS = new URLSearchParams(window.location.search);
@@ -408,7 +483,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   console.log("[Archive] build: link-scan-v3 | URL:", window.location.href, "| mode:", MODE, "| raw id param:", ROUTE_ID);
   if (MODE === "scan") document.title = "Archive Item · Public View";
   else if (MODE === "form") document.title = "Archive Item Submission";
-  else document.title = "DOA LA Storage & Archival · Manager";
+  else document.title = "Storage & Archival · Manager";
 
   const TABLE = "storage_items";
   const CSV_FILENAME = "storage_archive_backup.csv";
@@ -443,6 +518,16 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
                       : s === "Semester 2" ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
                       : "bg-slate-100 text-slate-600 ring-slate-200";
   const dash = '<span class="text-slate-300">—</span>';
+  // Keywords are stored as one comma-separated string; tidy, de-duplicate (case-insensitive) and cap them
+  const keywordList = s => {
+    const seen = new Set(), out = [];
+    String(s || "").split(/[,;\n]+/).forEach(k => {
+      const t = k.trim().replace(/\s+/g, " ");
+      if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); out.push(t); }
+    });
+    return out.slice(0, 20);
+  };
+  const STUDENT_ID_RE = /^A\d{7}[A-Z]$/;
 
   function toast(msg) {
     const t = $("toast");
@@ -483,8 +568,9 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     courseCode: r.course_code || "", courseName: r.course_name || "",
     coordinatorName: r.coordinator_name || "", coordinatorEmail: r.coordinator_email || "",
     tutorName: r.tutor_name || "", tutorEmail: r.tutor_email || "", tutorSame: r.tutor_same === true,
-    studentName: r.student_name || "", gradYear: r.grad_year || "",
+    studentName: r.student_name || "", studentId: r.student_id || "", gradYear: r.grad_year || "",
     contactMethod: r.contact_method || "", contactHandle: r.contact_handle || "",
+    projectName: r.project_name || "", projectLocation: r.project_location || "", keywords: r.keywords || "",
     photo: r.photo || "", createdAt: r.created_at || "",
   });
   const toRow = i => ({
@@ -492,8 +578,9 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     course_code: i.courseCode, course_name: i.courseName,
     coordinator_name: i.coordinatorName, coordinator_email: i.coordinatorEmail,
     tutor_name: i.tutorName, tutor_email: i.tutorEmail, tutor_same: i.tutorSame,
-    student_name: i.studentName, grad_year: i.gradYear,
+    student_name: i.studentName, student_id: i.studentId, grad_year: i.gradYear,
     contact_method: i.contactMethod, contact_handle: i.contactHandle,
+    project_name: i.projectName, project_location: i.projectLocation, keywords: i.keywords || null,
     photo: i.photo || null, created_at: i.createdAt,
   });
 
@@ -581,9 +668,15 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
         dRow("Course Coordinator", person(item.coordinatorName, item.coordinatorEmail)) +
         dRow("Tutor", person(item.tutorName, item.tutorEmail, item.tutorSame ? '<div class="text-[11px] text-slate-400">Same as course coordinator</div>' : ""))),
       section("Student Details",
-        dRow("Student Name", esc(item.studentName)) + dRow("Graduation Year", esc(item.gradYear)) +
+        dRow("Student Name", esc(item.studentName)) + dRow("Student ID", item.studentId ? `<span class="font-mono">${esc(item.studentId)}</span>` : "") +
+        dRow("Graduation Year", esc(item.gradYear)) +
         dRow("Preferred Contact", item.contactMethod
           ? `<span class="inline-flex items-center gap-1.5 text-xs text-slate-500">${meta ? `<i data-lucide="${meta.icon}" class="h-3.5 w-3.5"></i>` : ""}${esc(item.contactMethod)}</span><div>${contactLink(item.contactMethod, item.contactHandle)}</div>` : "")),
+      section("Archival Details",
+        dRow("Project Name", esc(item.projectName)) + dRow("Project Location", esc(item.projectLocation)) +
+        `<div class="sm:col-span-2"><dt class="text-xs uppercase tracking-wide text-slate-400">Keywords</dt><dd class="mt-1 flex flex-wrap gap-1.5">${
+          keywordList(item.keywords).map(k => `<span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200">${esc(k)}</span>`).join("") || dash
+        }</dd></div>`),
     ].join("");
   }
   function photoBlock(item, heightClass) {
@@ -697,6 +790,11 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     }
     el.setCustomValidity(msg);
   }
+  // Student ID format: "A" + 7 digits + 1 letter, e.g. A0123456B (typed in lower case is fine)
+  function validateStudentId() {
+    const el = $("studentId"), v = el.value.trim().toUpperCase();
+    el.setCustomValidity(v && !STUDENT_ID_RE.test(v) ? "Enter your Student ID in the format A0123456B (A, 7 digits, 1 letter)" : "");
+  }
   function applyContactMethod() {
     const meta = CONTACT_METHODS[checkedValue("contactMethod")];
     const el = $("contactHandle");
@@ -713,6 +811,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     $("academicYear").value = DEFAULT_AY;
     applyTutorSame();
     applyContactMethod();
+    validateStudentId();
   }
 
   // ---------- Photo handling ----------
@@ -800,14 +899,16 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
 
     const header = ["Item ID", "Academic Year", "Semester", "Course Code", "Course Name",
       "Course Coordinator Name", "Course Coordinator Email", "Tutor Name", "Tutor Email",
-      "Student Name", "Student Graduation Year", "Preferred Contact Method", "Contact Handle / Number / Email", "Date Added", "Label Link"];
+      "Student Name", "Student ID", "Student Graduation Year", "Preferred Contact Method", "Contact Handle / Number / Email",
+      "Project Name", "Project Location", "Keywords", "Date Added", "Label Link"];
 
     // Columns are listed one by one, so the Base64 `photo` field is never exported
     const rows = data.map(i => {
       const cells = [i.id, i.academicYear, i.semester, i.courseCode, i.courseName,
         i.coordinatorName, i.coordinatorEmail, i.tutorName, i.tutorEmail,
-        i.studentName, i.gradYear, i.contactMethod].map(csvCell);
+        i.studentName, i.studentId, i.gradYear, i.contactMethod].map(csvCell);
       cells.push(csvContact(i.contactHandle));
+      cells.push(csvCell(i.projectName), csvCell(i.projectLocation), csvCell(keywordList(i.keywords).join(", ")));
       cells.push(csvCell(csvDate(i.createdAt)));
       cells.push(csvCell(itemLink(i)));
       return cells.join(",");
@@ -859,7 +960,8 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   }
 
   const haystack = i => [i.id, i.academicYear, i.semester, i.courseCode, i.courseName, i.coordinatorName, i.coordinatorEmail,
-    i.tutorName, i.tutorEmail, i.studentName, i.gradYear, i.contactMethod, i.contactHandle].join(" ").toLowerCase();
+    i.tutorName, i.tutorEmail, i.studentName, i.studentId, i.gradYear, i.contactMethod, i.contactHandle,
+    i.projectName, i.projectLocation, i.keywords].join(" ").toLowerCase();
 
   function filtered() {
     const q = query.trim().toLowerCase();
@@ -898,7 +1000,13 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
       <td class="px-4 py-3">${personCell(i.tutorName, i.tutorEmail, i.tutorSame ? '<div class="text-[11px] text-slate-400">Same as coordinator</div>' : "")}</td>
       <td class="px-4 py-3">
         <div class="max-w-[12rem] truncate">${esc(i.studentName) || dash}</div>
+        ${i.studentId ? `<div class="text-xs font-mono text-slate-500">${esc(i.studentId)}</div>` : ""}
         ${i.gradYear ? `<div class="text-xs text-slate-500">Class of ${esc(i.gradYear)}</div>` : ""}
+      </td>
+      <td class="px-4 py-3">
+        <div class="max-w-[14rem] truncate">${esc(i.projectName) || dash}</div>
+        ${i.projectLocation ? `<div class="max-w-[14rem] truncate text-xs text-slate-500">${esc(i.projectLocation)}</div>` : ""}
+        ${keywordList(i.keywords).length ? `<div class="max-w-[14rem] truncate text-[11px] text-slate-400">${esc(keywordList(i.keywords).join(", "))}</div>` : ""}
       </td>
       <td class="px-4 py-3">
         ${meta ? `<span class="inline-flex items-center gap-1 text-xs font-medium text-slate-600"><i data-lucide="${meta.icon}" class="h-3.5 w-3.5"></i>${esc(i.contactMethod)}</span>
@@ -1086,6 +1194,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     $("tutorSame").addEventListener("change", applyTutorSame);
     $("contactMethods").addEventListener("change", applyContactMethod);
     $("contactHandle").addEventListener("input", validateContact);
+    $("studentId").addEventListener("input", validateStudentId);
 
     $("photo").addEventListener("change", async e => {
       const file = e.target.files && e.target.files[0];
@@ -1114,6 +1223,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
       if (saving) return;
       if (processingPhoto) { toast("Photo is still processing — one moment"); return; }
       if (!db) { toast(DB_NOT_READY); return; }
+      if (!pendingPhoto) { toast("Please add a photo of the storage item"); return; }
       const same = $("tutorSame").checked;
       const coordinatorName = $("coordinatorName").value.trim();
       const coordinatorEmail = $("coordinatorEmail").value.trim();
@@ -1129,9 +1239,13 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
         tutorName: same ? coordinatorName : $("tutorName").value.trim(),
         tutorEmail: same ? coordinatorEmail : $("tutorEmail").value.trim(),
         studentName: $("studentName").value.trim(),
+        studentId: $("studentId").value.trim().toUpperCase(),
         gradYear: $("gradYear").value,
         contactMethod: checkedValue("contactMethod"),
         contactHandle: $("contactHandle").value.trim(),
+        projectName: $("projectName").value.trim(),
+        projectLocation: $("projectLocation").value.trim(),
+        keywords: keywordList($("keywords").value).join(", "),
         photo: pendingPhoto,
         createdAt: new Date().toISOString(),
       };
@@ -1194,15 +1308,123 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   }
 
   // ---------- Manager login + dashboard (?manage) ----------
-  let lastUid = null, sessionApplied = false, loginMsg = "";
+  let lastUid = null, sessionApplied = false, loginMsg = "", loginNotice = "";
+  let recoveryMode = false, resetTarget = "password", forgotCooldownTimer = null;
+  const RESET_TARGETS = ["password", "email", "both"];
 
   function showManagerView(view, email = "") {
     $("loginApp").hidden = view !== "login";
     $("adminApp").hidden = view !== "admin";
     $("userEmail").textContent = email;
     $("loginError").textContent = view === "login" ? loginMsg : "";
+    $("loginNotice").textContent = view === "login" ? loginNotice : "";
+    $("loginNotice").hidden = !(view === "login" && loginNotice);
     document.body.style.overflow = "";
     icons();
+  }
+
+  // Which card is visible inside the login screen: "login" | "forgot" | "reset"
+  function showAuthPanel(name) {
+    $("loginForm").hidden = name !== "login";
+    $("forgotForm").hidden = name !== "forgot";
+    $("resetForm").hidden = name !== "reset";
+    icons();
+  }
+
+  // ---------- Forgot sign in (request a recovery link) ----------
+  function startForgotCooldown(seconds = 60) {
+    const btn = $("forgotBtn");
+    clearInterval(forgotCooldownTimer);
+    let left = seconds;
+    btn.disabled = true;
+    const tick = () => {
+      if (left <= 0) { clearInterval(forgotCooldownTimer); btn.disabled = false; btn.textContent = "Send recovery link"; return; }
+      btn.textContent = `Resend in ${left}s`; left--;
+    };
+    tick();
+    forgotCooldownTimer = setInterval(tick, 1000);
+  }
+  function setForgotMsg(text, ok) {
+    const el = $("forgotMsg");
+    el.textContent = text;
+    el.className = "text-sm min-h-[1.25rem] " + (ok ? "text-emerald-700" : "text-rose-600");
+  }
+
+  async function sendRecoveryLink(e) {
+    e.preventDefault();
+    const email = $("forgotEmail").value.trim();
+    const target = (checkedValue("resetTarget") || "password").toLowerCase();
+    const base = baseUrl() || (window.location.origin && window.location.origin !== "null"
+      ? window.location.origin + window.location.pathname : "");
+    if (!base) { setForgotMsg("Open this page from its hosted web address (or set PUBLIC_BASE_URL) to use recovery.", false); return; }
+    setForgotMsg("", true);
+    $("forgotBtn").disabled = true; $("forgotBtn").textContent = "Sending…";
+    const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: base + "?manage&reset=" + encodeURIComponent(target) });
+    // Rate-limit and server errors are shown; otherwise the message is identical whether or not the email exists
+    if (error && (error.status === 429 || error.status >= 500)) {
+      $("forgotBtn").disabled = false; $("forgotBtn").textContent = "Send recovery link";
+      setForgotMsg(error.status === 429 ? "Too many requests. Please wait a few minutes and try again." : "Couldn't send the email. Please try again later.", false);
+      return;
+    }
+    setForgotMsg("If that email belongs to a manager account, a recovery link is on its way. Check your inbox (and spam). The link expires after a short time.", true);
+    startForgotCooldown(60);
+  }
+
+  // ---------- Recovery link opened: set new password and/or email ----------
+  function enterRecovery() {
+    recoveryMode = true; sessionApplied = false; lastUid = null;
+    const wantPw = resetTarget !== "email", wantEm = resetTarget !== "password";
+    $("resetPasswordFields").classList.toggle("hidden", !wantPw);
+    $("resetEmailFields").classList.toggle("hidden", !wantEm);
+    $("newPassword").required = wantPw; $("newPassword2").required = wantPw;
+    $("newEmail").required = wantEm;
+    $("resetMsg").textContent = "";
+    // Remove the tokens from the address bar
+    try { history.replaceState(null, "", window.location.pathname + "?manage"); } catch { /* ignore */ }
+    showManagerView("login");
+    showAuthPanel("reset");
+  }
+
+  async function submitReset(e) {
+    e.preventDefault();
+    const wantPw = resetTarget !== "email", wantEm = resetTarget !== "password";
+    const msg = t => { $("resetMsg").textContent = t; };
+    const attrs = {};
+    if (wantPw) {
+      const p1 = $("newPassword").value, p2 = $("newPassword2").value;
+      if (p1.length < 8) return msg("Password must be at least 8 characters.");
+      if (p1 !== p2) return msg("The two passwords don't match.");
+      attrs.password = p1;
+    }
+    if (wantEm) {
+      const em = $("newEmail").value.trim();
+      if (!EMAIL_RE.test(em)) return msg("Enter a valid email address.");
+      attrs.email = em;
+    }
+    msg("");
+    const btn = $("resetBtn"); btn.disabled = true; btn.textContent = "Saving…";
+    const { error } = await db.auth.updateUser(attrs);
+    btn.disabled = false; btn.textContent = "Save changes";
+    if (error) return msg(errText(error));
+
+    const parts = [];
+    if (wantPw) parts.push("Your password was updated.");
+    if (wantEm) parts.push("A confirmation link was sent to your new email. Confirm it before using that address.");
+    loginNotice = parts.join(" ") + " Please sign in again.";
+    loginMsg = "";
+    recoveryMode = false;
+    $("resetForm").reset();
+    await db.auth.signOut();
+    showManagerView("login");
+    showAuthPanel("login");
+  }
+
+  async function cancelReset() {
+    recoveryMode = false;
+    loginNotice = ""; loginMsg = "";
+    await db.auth.signOut();
+    showManagerView("login");
+    showAuthPanel("login");
   }
 
   async function applySession(session) {
@@ -1213,10 +1435,17 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     if (!uid) { items = []; showManagerView("login"); return; }
 
     // The account must also be on the admin allow-list defined in the database (is_admin)
-    let ok = false;
-    try { const { data, error } = await db.rpc("is_admin"); ok = !error && data === true; } catch { ok = false; }
+    let ok = false, why = "";
+    const signedInEmail = (session.user && session.user.email) || "";
+    try {
+      const { data, error } = await db.rpc("is_admin");
+      ok = !error && data === true;
+      if (error) why = "database error: " + (error.code ? error.code + " · " : "") + errText(error);
+      else if (!ok) why = `is_admin returned ${JSON.stringify(data)} for "${signedInEmail}"`;
+    } catch (e) { ok = false; why = "request failed: " + errText(e); }
     if (!ok) {
-      loginMsg = "That account isn't authorised to manage the archive.";
+      console.warn("[Archive] Admin check failed:", why);
+      loginMsg = "That account isn't authorised to manage the archive." + (why ? " (" + why + ")" : "");
       await db.auth.signOut();
       showManagerView("login");
       return;
@@ -1230,12 +1459,34 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   async function bootManage() {
     bindManagerEvents();
     initFormControls();
-    if (!db) { loginMsg = DB_NOT_READY; showManagerView("login"); $("loginBtn").disabled = true; return; }
+    buildChips("resetTargets", "resetTarget", RESET_TARGETS.map(v => ({ value: v[0].toUpperCase() + v.slice(1) })));
+    const defaultTarget = document.querySelector('input[name="resetTarget"]');
+    if (defaultTarget) defaultTarget.checked = true;
+    showAuthPanel("login");
+    if (!db) { loginMsg = DB_NOT_READY; showManagerView("login"); $("loginBtn").disabled = true; $("forgotLink").disabled = true; return; }
+
+    // What the emailed link is for (password / email / both) comes back in the URL
+    const requested = (ROUTE_PARAMS.get("reset") || "").toLowerCase();
+    resetTarget = RESET_TARGETS.includes(requested) ? requested : "password";
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const recoveryExpected = hash.get("type") === "recovery" || (ROUTE_PARAMS.has("reset") && ROUTE_PARAMS.has("code"));
+    const linkError = hash.get("error_code") || hash.get("error");
+
+    $("forgotLink").addEventListener("click", () => {
+      loginMsg = ""; loginNotice = ""; $("loginError").textContent = "";
+      $("forgotEmail").value = $("loginEmail").value;
+      setForgotMsg("", true);
+      showAuthPanel("forgot");
+    });
+    $("forgotBack").addEventListener("click", () => { loginMsg = ""; $("loginError").textContent = ""; showAuthPanel("login"); });
+    $("forgotForm").addEventListener("submit", sendRecoveryLink);
+    $("resetForm").addEventListener("submit", submitReset);
+    $("resetCancel").addEventListener("click", cancelReset);
 
     $("loginForm").addEventListener("submit", async e => {
       e.preventDefault();
       const btn = $("loginBtn");
-      loginMsg = ""; $("loginError").textContent = "";
+      loginMsg = ""; loginNotice = ""; $("loginError").textContent = ""; $("loginNotice").hidden = true;
       btn.disabled = true; btn.textContent = "Signing in…";
       const { error } = await db.auth.signInWithPassword({ email: $("loginEmail").value.trim(), password: $("loginPassword").value });
       btn.disabled = false; btn.textContent = "Sign in";
@@ -1245,8 +1496,23 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     $("signOutBtn").addEventListener("click", async () => { await db.auth.signOut(); });
 
     // Never await Supabase calls directly inside this callback (can deadlock), so defer
-    db.auth.onAuthStateChange((_event, session) => { setTimeout(() => applySession(session), 0); });
+    db.auth.onAuthStateChange((event, session) => {
+      setTimeout(() => {
+        if (event === "PASSWORD_RECOVERY") { enterRecovery(); return; }
+        if (recoveryMode) return; // stay on the reset form until it's finished
+        applySession(session);
+      }, 0);
+    });
     const { data } = await db.auth.getSession();
+    if (recoveryExpected && data && data.session) { enterRecovery(); return; }
+    if (recoveryExpected || linkError) {
+      loginMsg = "That recovery link is invalid or has expired. Request a new one below.";
+      showManagerView("login");
+      showAuthPanel("forgot");
+      setForgotMsg(loginMsg, false);
+      try { history.replaceState(null, "", window.location.pathname + "?manage"); } catch { /* ignore */ }
+      return;
+    }
     applySession(data ? data.session : null);
   }
 
