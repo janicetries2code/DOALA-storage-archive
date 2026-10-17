@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Storage & Archival Dashboard</title>
+<title>LA Storage & Archival Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -387,8 +387,8 @@
 
 <script>
 // ======================= CONFIGURATION — paste your keys here =======================
-const SUPABASE_URL = "";       // e.g. "https://abcdxyz.supabase.co"
-const SUPABASE_ANON_KEY = "";  // your project's "anon public" API key
+const SUPABASE_URL = "https://bnszdnxzpqicknwkrwrh.supabase.co";       // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuc3pkbnh6cHFpY2tud2tyd3JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNjg1MTQsImV4cCI6MjEwNzc0NDUxNH0.3JUagPMmVSxZ91xROQ74ArNjko24NtPpT_Gfh3phF4Y";  // your project's "anon public" API key
 const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes, e.g. "https://archive.example.com/"
 // =====================================================================================
 
@@ -408,7 +408,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   console.log("[Archive] build: link-scan-v3 | URL:", window.location.href, "| mode:", MODE, "| raw id param:", ROUTE_ID);
   if (MODE === "scan") document.title = "Archive Item · Public View";
   else if (MODE === "form") document.title = "Archive Item Submission";
-  else document.title = "Storage & Archival · Manager";
+  else document.title = "DOA LA Storage & Archival · Manager";
 
   const TABLE = "storage_items";
   const CSV_FILENAME = "storage_archive_backup.csv";
