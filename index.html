@@ -165,9 +165,9 @@
     <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-200">
       <div>
         <h2 id="formTitle" class="text-base font-semibold flex items-center gap-2">
-          <i data-lucide="plus-circle" class="h-5 w-5 text-indigo-600"></i> Archive New Item
+          <i data-lucide="plus-circle" class="h-5 w-5 text-indigo-600"></i> Store New Item
         </h2>
-        <p class="text-xs text-slate-500 mt-0.5">A unique ID and a scannable QR link label are generated automatically. Fields marked <span class="text-rose-500">*</span> are required.</p>
+        <p class="text-xs text-slate-500 mt-0.5">A unique ID and a scannable QR link label are generated automatically. Fields marked <span class="text-rose-500">*</span> are required.Please Download, Print and Stick QR link label on your storage items</p>
       </div>
       <button type="button" id="formClose" class="h-8 w-8 shrink-0 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500" aria-label="Close form">
         <i data-lucide="x" class="h-5 w-5"></i>
@@ -270,7 +270,7 @@
             <div id="contactMethods" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
           </div>
           <div class="sm:col-span-2">
-            <label class="lbl" for="contactHandle"><span id="contactLabel">Contact handle / number / email</span> <span class="text-rose-500">*</span></label>
+            <label class="lbl" for="contactHandle"><span id="contactLabel">Contact Handle / Number / Email</span> <span class="text-rose-500">*</span></label>
             <input id="contactHandle" required maxlength="120" placeholder="Select a preferred method first" class="field" />
           </div>
         </div>
@@ -285,15 +285,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
           <div>
             <label class="lbl" for="projectName">Project Name <span class="text-rose-500">*</span></label>
-            <input id="projectName" required maxlength="120" placeholder="e.g. Smart Irrigation Prototype" class="field" />
+            <input id="projectName" required maxlength="120" placeholder="e.g. Sensing Landscapes" class="field" />
           </div>
           <div>
             <label class="lbl" for="projectLocation">Project Location <span class="text-rose-500">*</span></label>
-            <input id="projectLocation" required maxlength="120" placeholder="e.g. Store Room B, Level 2, Shelf 4" class="field" />
+            <input id="projectLocation" required maxlength="120" placeholder="e.g. Kent Ridge, Singapore" class="field" />
           </div>
           <div class="sm:col-span-2">
             <label class="lbl" for="keywords">Keywords <span class="text-slate-400 font-normal">(optional)</span></label>
-            <input id="keywords" maxlength="200" placeholder="Separate with commas, e.g. robotics, sensors, IoT" class="field" />
+            <input id="keywords" maxlength="200" placeholder="Separate with commas, e.g. sensory, perception, more-than-humans" class="field" />
           </div>
         </div>
         <span class="lbl">Photo of Storage Item <span class="text-rose-500">*</span></span>
@@ -469,7 +469,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
 
 (() => {
   // ---------- Routing check (runs first) ----------
-  //   /            -> public "Archive New Item" form only
+  //   /            -> public "Store New Item" form only
   //   /?id=XYZ     -> public scan view of one item
   //   /?manage     -> manager login, then the dashboard (requires a Supabase account)
   const ROUTE_PARAMS = new URLSearchParams(window.location.search);
