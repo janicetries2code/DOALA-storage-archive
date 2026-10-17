@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Storage & Archival Dashboard</title>
+<title>LA Storage & Archival Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -56,7 +56,7 @@
 </header>
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-  <!-- Setup banner (shown only if Supabase keys are missing / connection fails) -->
+  <!-- Setup banner (shown only if  keys are missing / connection fails) -->
   <div id="dbBanner" hidden class="mb-6 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm px-4 py-3 flex gap-3 items-start">
     <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0 mt-0.5"></i>
     <div id="dbBannerText"></div>
@@ -203,21 +203,21 @@
         <div class="grid grid-cols-1 sm:grid-cols-6 gap-4">
           <div class="sm:col-span-2">
             <label class="lbl" for="courseCode">Course Code <span class="text-rose-500">*</span></label>
-            <input id="courseCode" required maxlength="20" placeholder="e.g. CS1010" class="field" />
+            <input id="courseCode" required maxlength="20" placeholder="e.g. LAD1001A" class="field" />
           </div>
           <div class="sm:col-span-4">
             <label class="lbl" for="courseName">Course Name <span class="text-rose-500">*</span></label>
-            <input id="courseName" required maxlength="100" placeholder="e.g. Programming Methodology" class="field" />
+            <input id="courseName" required maxlength="100" placeholder="e.g. Design 1" class="field" />
           </div>
 
           <p class="sm:col-span-6 -mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Course Coordinator</p>
           <div class="sm:col-span-3">
             <label class="lbl" for="coordinatorName">Name <span class="text-rose-500">*</span></label>
-            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. Jane Tan" class="field" />
+            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. John Tan" class="field" />
           </div>
           <div class="sm:col-span-3">
             <label class="lbl" for="coordinatorEmail">Email <span class="text-rose-500">*</span></label>
-            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@university.edu" class="field" />
+            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@nus.edu.sg" class="field" />
           </div>
 
           <div class="sm:col-span-6 -mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -236,7 +236,7 @@
               </div>
               <div>
                 <label class="lbl" for="tutorEmail">Email <span class="text-rose-500">*</span></label>
-                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@university.edu" class="field" />
+                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@nus.edu.sg" class="field" />
               </div>
             </div>
           </div>
@@ -460,8 +460,8 @@
 
 <script>
 // ======================= CONFIGURATION — paste your keys here =======================
-const SUPABASE_URL = "";       // e.g. "https://abcdxyz.supabase.co"
-const SUPABASE_ANON_KEY = "";  // your project's "anon public" API key
+const SUPABASE_URL = "https://bnszdnxzpqicknwkrwrh.supabase.co";       // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuc3pkbnh6cHFpY2tud2tyd3JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNjg1MTQsImV4cCI6MjEwNzc0NDUxNH0.3JUagPMmVSxZ91xROQ74ArNjko24NtPpT_Gfh3phF4Y";  // your project's "anon public" API key
 const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes, e.g. "https://archive.example.com/"
 // Reset links return to this page. In Supabase → Authentication → URL Configuration, add your site URL
 // (e.g. https://archive.example.com/**) to "Redirect URLs" or recovery emails will be rejected.
@@ -483,7 +483,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   console.log("[Archive] build: link-scan-v3 | URL:", window.location.href, "| mode:", MODE, "| raw id param:", ROUTE_ID);
   if (MODE === "scan") document.title = "Archive Item · Public View";
   else if (MODE === "form") document.title = "Archive Item Submission";
-  else document.title = "Storage & Archival · Manager";
+  else document.title = "LA Storage & Archival · Manager";
 
   const TABLE = "storage_items";
   const CSV_FILENAME = "storage_archive_backup.csv";
