@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>NUS DOA LA Storage & Archival Dashboard</title>
+<title>Storage & Archival Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -46,6 +46,10 @@
       </button>
       <button type="button" data-open-form class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">
         <i data-lucide="plus" class="h-4 w-4"></i> Add Item
+      </button>
+      <span id="userEmail" class="hidden md:inline text-xs text-slate-500 max-w-[12rem] truncate"></span>
+      <button id="signOutBtn" type="button" class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+        <i data-lucide="log-out" class="h-4 w-4"></i> <span class="hidden sm:inline">Sign out</span>
       </button>
     </div>
   </div>
@@ -103,8 +107,8 @@
         <select id="filterYear" class="field !w-auto" aria-label="Filter by academic year"><option value="">All years</option></select>
         <select id="filterSemester" class="field !w-auto" aria-label="Filter by semester">
           <option value="">All semesters</option>
-          <option value="Sem 1">Semester 1</option>
-          <option value="Sem 2">Semester 2</option>
+          <option value="Semester 1">Semester 1</option>
+          <option value="Semester 2">Semester 2</option>
         </select>
         <button id="refreshBtn" type="button" title="Reload items from the cloud database"
           class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 whitespace-nowrap">
@@ -198,21 +202,21 @@
         <div class="grid grid-cols-1 sm:grid-cols-6 gap-4">
           <div class="sm:col-span-2">
             <label class="lbl" for="courseCode">Course Code <span class="text-rose-500">*</span></label>
-            <input id="courseCode" required maxlength="20" placeholder="e.g. LAD1010" class="field" />
+            <input id="courseCode" required maxlength="20" placeholder="e.g. CS1010" class="field" />
           </div>
           <div class="sm:col-span-4">
             <label class="lbl" for="courseName">Course Name <span class="text-rose-500">*</span></label>
-            <input id="courseName" required maxlength="100" placeholder="e.g. Intro to LA" class="field" />
+            <input id="courseName" required maxlength="100" placeholder="e.g. Programming Methodology" class="field" />
           </div>
 
           <p class="sm:col-span-6 -mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Course Coordinator</p>
           <div class="sm:col-span-3">
             <label class="lbl" for="coordinatorName">Name <span class="text-rose-500">*</span></label>
-            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. John Tan" class="field" />
+            <input id="coordinatorName" required maxlength="80" placeholder="e.g. Dr. Jane Tan" class="field" />
           </div>
           <div class="sm:col-span-3">
             <label class="lbl" for="coordinatorEmail">Email <span class="text-rose-500">*</span></label>
-            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@nus.edu.sg" class="field" />
+            <input id="coordinatorEmail" type="email" required maxlength="120" placeholder="coordinator@university.edu" class="field" />
           </div>
 
           <div class="sm:col-span-6 -mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -231,7 +235,7 @@
               </div>
               <div>
                 <label class="lbl" for="tutorEmail">Email <span class="text-rose-500">*</span></label>
-                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@uns.edu.sg" class="field" />
+                <input id="tutorEmail" type="email" required maxlength="120" placeholder="tutor@university.edu" class="field" />
               </div>
             </div>
           </div>
@@ -273,7 +277,7 @@
           <span class="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><i data-lucide="camera" class="h-4 w-4"></i></span>
           <h3 class="text-sm font-semibold">4. Archival Details</h3>
         </div>
-        <span class="lbl">Photo of Storage Item <span class="text-slate-400 font-normal"></span></span>
+        <span class="lbl">Photo of Storage Item <span class="text-slate-400 font-normal">(optional)</span></span>
         <input id="photo" type="file" accept="image/*" class="sr-only peer" />
         <label id="photoDrop" for="photo"
           class="flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-indigo-400 cursor-pointer px-3 py-6 text-center transition peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-500">
@@ -307,7 +311,53 @@
   </form>
 </div>
 
-<!-- Detail / QR label modal -->
+</div><!-- /adminApp -->
+
+<!-- ===================================================================== -->
+<!-- MANAGER LOGIN. Shown at ?manage when not signed in                      -->
+<!-- ===================================================================== -->
+<div id="loginApp" hidden>
+  <div class="min-h-screen flex items-center justify-center px-4 py-10">
+    <form id="loginForm" class="w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm"><i data-lucide="lock" class="h-5 w-5"></i></div>
+        <div>
+          <h1 class="text-lg font-semibold leading-tight">Manager sign in</h1>
+          <p class="text-xs text-slate-500">Storage &amp; Archival dashboard</p>
+        </div>
+      </div>
+      <div>
+        <label class="lbl" for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" required autocomplete="username" placeholder="you@university.edu" class="field" />
+      </div>
+      <div>
+        <label class="lbl" for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" required autocomplete="current-password" class="field" />
+      </div>
+      <p id="loginError" class="text-sm text-rose-600 min-h-[1.25rem]" role="alert"></p>
+      <button id="loginBtn" type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm transition">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PUBLIC ENTRY FORM. This is the site root (no parameters)               -->
+<!-- ===================================================================== -->
+<div id="publicFormApp" hidden>
+  <div class="max-w-3xl mx-auto px-4 py-6 sm:py-10">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm"><i data-lucide="archive" class="h-5 w-5"></i></div>
+      <div>
+        <h1 class="text-lg font-semibold leading-tight">Archive Item Submission</h1>
+        <p class="text-xs text-slate-500">Register an archived item and get its scannable QR label</p>
+      </div>
+    </div>
+    <div id="publicFormError" hidden class="mb-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm px-4 py-3"></div>
+    <div id="publicFormHost"></div>
+  </div>
+</div>
+
+<!-- Detail / QR label modal (used by the manager dashboard and after a public submission) -->
 <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
   <div id="modalBackdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
   <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[92vh] overflow-y-auto fade-in">
@@ -317,8 +367,6 @@
     <div id="modalBody" class="p-6 sm:p-8"></div>
   </div>
 </div>
-
-</div><!-- /adminApp -->
 
 <!-- ===================================================================== -->
 <!-- PUBLIC SCAN VIEW. Shown only when the URL has ?id=...                  -->
@@ -339,20 +387,28 @@
 
 <script>
 // ======================= CONFIGURATION — paste your keys here =======================
-const SUPABASE_URL = "https://bnszdnxzpqicknwkrwrh.supabase.co";       // e.g. "https://abcdxyz.supabase.co"
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuc3pkbnh6cHFpY2tud2tyd3JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNjg1MTQsImV4cCI6MjEwNzc0NDUxNH0.3JUagPMmVSxZ91xROQ74ArNjko24NtPpT_Gfh3phF4Y";  // your project's "anon public" API key
+const SUPABASE_URL = "";       // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_ANON_KEY = "";  // your project's "anon public" API key
 const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes, e.g. "https://archive.example.com/"
 // =====================================================================================
 
 (() => {
   // ---------- Routing check (runs first) ----------
-  // ?id=XYZ present  -> public scan view only. No id -> regular entry form + dashboard.
+  //   /            -> public "Archive New Item" form only
+  //   /?id=XYZ     -> public scan view of one item
+  //   /?manage     -> manager login, then the dashboard (requires a Supabase account)
   const ROUTE_PARAMS = new URLSearchParams(window.location.search);
   const ROUTE_ID = ROUTE_PARAMS.has("id") ? (ROUTE_PARAMS.get("id") || "").trim() : null;
-  const IS_PUBLIC_VIEW = ROUTE_ID !== null;
-  document.getElementById("adminApp").hidden = IS_PUBLIC_VIEW;
-  document.getElementById("publicApp").hidden = !IS_PUBLIC_VIEW;
-  if (IS_PUBLIC_VIEW) document.title = "Archive Item · Public View";
+  const MODE = ROUTE_ID !== null ? "scan" : ROUTE_PARAMS.has("manage") ? "manage" : "form";
+  const IS_PUBLIC_FORM = MODE === "form";
+  document.getElementById("publicApp").hidden = MODE !== "scan";
+  document.getElementById("publicFormApp").hidden = MODE !== "form";
+  document.getElementById("adminApp").hidden = true;  // the manager views are revealed only after sign-in
+  document.getElementById("loginApp").hidden = true;
+  console.log("[Archive] build: link-scan-v3 | URL:", window.location.href, "| mode:", MODE, "| raw id param:", ROUTE_ID);
+  if (MODE === "scan") document.title = "Archive Item · Public View";
+  else if (MODE === "form") document.title = "Archive Item Submission";
+  else document.title = "Storage & Archival · Manager";
 
   const TABLE = "storage_items";
   const CSV_FILENAME = "storage_archive_backup.csv";
@@ -383,8 +439,8 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   const photoSrc = item => (item && typeof item.photo === "string" && item.photo.startsWith("data:image/")) ? item.photo : "";
   const titleOf = i => i.courseCode || i.courseName || i.studentName || i.id;
   const termLabel = i => [i.academicYear, i.semester && i.semester.replace("Semester", "Sem")].filter(Boolean).join(" · ");
-  const semStyle = s => s === "Sem 1" ? "bg-indigo-50 text-indigo-700 ring-indigo-200"
-                      : s === "Sem 2" ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+  const semStyle = s => s === "Semester 1" ? "bg-indigo-50 text-indigo-700 ring-indigo-200"
+                      : s === "Semester 2" ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
                       : "bg-slate-100 text-slate-600 ring-slate-200";
   const dash = '<span class="text-slate-300">—</span>';
 
@@ -449,9 +505,16 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   }
   async function dbFetchOne(id) {
     if (!db) throw new Error(DB_NOT_READY);
-    const { data, error } = await db.from(TABLE).select("*").eq("id", id).maybeSingle();
-    if (error) throw error;
-    return data ? fromRow(data) : null;
+    // Public scans fetch ONE item through a database function; the table itself can't be listed by the public
+    console.log("[Archive] Calling rpc get_storage_item with p_id =", JSON.stringify(id));
+    const { data, error, status } = await db.rpc("get_storage_item", { p_id: id });
+    console.log("[Archive] Supabase response → status:", status, "| rows:", Array.isArray(data) ? data.length : data);
+    if (error) {
+      console.error("[Archive] Supabase error:", { code: error.code, message: error.message, details: error.details, hint: error.hint });
+      throw error;
+    }
+    console.log("[Archive] Supabase data:", data);
+    return data && data.length ? fromRow(data[0]) : null;
   }
   async function dbInsert(item) {
     if (!db) throw new Error(DB_NOT_READY);
@@ -533,20 +596,36 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   // ---------- Public scan view ----------
   async function bootPublic() {
     const box = $("publicBody");
-    const message = (icon, color, title, sub) => {
+    const message = (icon, color, title, sub, detail = "") => {
       box.innerHTML = `<div class="p-10 text-center">
         <div class="mx-auto h-14 w-14 rounded-full ${color} flex items-center justify-center mb-3"><i data-lucide="${icon}" class="h-7 w-7"></i></div>
-        <p class="font-semibold">${esc(title)}</p><p class="mt-1 text-sm text-slate-500">${esc(sub)}</p></div>`;
+        <p class="font-semibold">${esc(title)}</p><p class="mt-1 text-sm text-slate-500">${esc(sub)}</p>
+        ${detail ? `<p class="mt-4 text-[11px] font-mono text-slate-400 break-all">${esc(detail)}</p>` : ""}</div>`;
       icons();
     };
     box.innerHTML = `<div class="p-12 text-center text-sm text-slate-500"><div class="mx-auto mb-3 h-8 w-8 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin"></div>Loading item…</div>`;
 
-    const id = ROUTE_ID.toUpperCase();
-    if (!ID_RE.test(id)) return message("search-x", "bg-slate-100 text-slate-400", "Item not found", "This link doesn't look like a valid archive label.");
+    // Extract the ID from ?id=... , tolerating stray spaces, quotes or a trailing "/" that scanner apps sometimes add
+    const id = String(ROUTE_ID).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+    console.log("[Archive] Extracted item ID:", JSON.stringify(id), "(from raw:", JSON.stringify(ROUTE_ID) + ")");
+    if (!ID_RE.test(id)) {
+      console.warn("[Archive] ID failed format check:", id);
+      return message("search-x", "bg-slate-100 text-slate-400", "Item not found", "This link doesn't look like a valid archive label.", "Reason: bad ID format · id=" + id);
+    }
     let item;
     try { item = await dbFetchOne(id); }
-    catch (e) { return message("cloud-off", "bg-amber-50 text-amber-600", "Couldn't load this item", dbConfigured ? "Please check your connection and try again." : DB_NOT_READY); }
-    if (!item) return message("search-x", "bg-slate-100 text-slate-400", "Item not found", "No archive entry matches this label. It may have been removed.");
+    catch (e) {
+      console.error("[Archive] Fetch failed:", e);
+      const code = e && e.code ? e.code + " · " : "";
+      return message("cloud-off", "bg-amber-50 text-amber-600", "Couldn't load this item",
+        dbConfigured ? "Please check your connection and try again." : DB_NOT_READY,
+        "Reason: " + code + errText(e));
+    }
+    if (!item) {
+      console.warn("[Archive] Query succeeded but returned 0 rows for id:", id);
+      return message("search-x", "bg-slate-100 text-slate-400", "Item not found", "No archive entry matches this label. It may have been removed.", "Reason: database returned 0 rows · id=" + id);
+    }
+    console.log("[Archive] Item loaded:", item.id);
 
     document.title = titleOf(item) + " · Archive Item";
     box.innerHTML = `
@@ -593,7 +672,7 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     fillSelect($("academicYear"), ay, "Select academic year");
     const gy = []; for (let y = CUR_YEAR - 3; y <= CUR_YEAR + 8; y++) gy.push(String(y));
     fillSelect($("gradYear"), gy, "Select graduation year");
-    buildChips("semesterChips", "semester", [{ value: "Sem 1" }, { value: "Sem 2" }]);
+    buildChips("semesterChips", "semester", [{ value: "Semester 1" }, { value: "Semester 2" }]);
     buildChips("contactMethods", "contactMethod", Object.keys(CONTACT_METHODS).map(k => ({ value: k, icon: CONTACT_METHODS[k].icon })));
     $("academicYear").value = DEFAULT_AY;
     applyTutorSame();
@@ -881,8 +960,9 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
   function closeForm() { $("formModal").classList.add("hidden"); syncScrollLock(); }
   function closeModal() { $("modal").classList.add("hidden"); syncScrollLock(); }
 
-  function openModal(id, isNew = false) {
-    const item = items.find(i => i.id === id);
+  // ref = item id (manager) or an item object (public form). publicMode hides manager-only actions.
+  function openModal(ref, isNew = false, publicMode = false) {
+    const item = (ref && typeof ref === "object") ? ref : items.find(i => i.id === ref);
     if (!item) return;
     const qr = qrDataURL(item, 320);
     const link = itemLink(item);
@@ -916,8 +996,11 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
         </div>
       </div>
       <div class="mt-6 pt-5 border-t border-slate-100 flex flex-wrap gap-2 justify-between">
-        <button id="delBtn" class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-rose-600 hover:bg-rose-50">
-          <i data-lucide="trash-2" class="h-4 w-4"></i> Delete</button>
+        ${publicMode
+          ? `<button id="anotherBtn" class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-indigo-600 hover:bg-indigo-50">
+              <i data-lucide="plus" class="h-4 w-4"></i> Add another item</button>`
+          : `<button id="delBtn" class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-rose-600 hover:bg-rose-50">
+              <i data-lucide="trash-2" class="h-4 w-4"></i> Delete</button>`}
         <div class="flex gap-2">
           <button id="dlBtn" class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">
             <i data-lucide="download" class="h-4 w-4"></i> Download Label</button>
@@ -930,7 +1013,10 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     icons();
     $("dlBtn").onclick = () => downloadLabel(item);
     $("printBtn").onclick = () => printLabel(item);
-    $("delBtn").onclick = async () => {
+    const anotherBtn = $("anotherBtn");
+    if (anotherBtn) anotherBtn.onclick = () => { closeModal(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    const delBtn = $("delBtn");
+    if (delBtn) delBtn.onclick = async () => {
       if (!confirm(`Delete "${titleOf(item)}"${item.studentName ? " (" + item.studentName + ")" : ""}? This cannot be undone and the printed QR label will stop working.`)) return;
       const btn = $("delBtn"); btn.disabled = true;
       try {
@@ -1059,8 +1145,10 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
         return;
       }
       saving = false; refreshSubmit();
+      resetForm();
+      if (IS_PUBLIC_FORM) { openModal(item, true, true); return; } // public visitors get their QR label, nothing else
       items.unshift(item);
-      resetForm(); closeForm(); render(); openModal(item.id, true);
+      closeForm(); render(); openModal(item.id, true);
     });
 
     $("search").addEventListener("input", e => { query = e.target.value; renderGrid(); });
@@ -1087,15 +1175,85 @@ const PUBLIC_BASE_URL = "";    // optional: force the base URL used in QR codes,
     });
   }
 
-  async function bootDashboard() {
+  // ---------- Public entry form (site root) ----------
+  function bootForm() {
+    // Move the form out of the manager's pop-up and show it as the page itself
+    const form = $("itemForm");
+    $("publicFormHost").appendChild(form);
+    form.className = "bg-white rounded-2xl border border-slate-200 shadow-sm w-full flex flex-col overflow-hidden";
+    $("formClose").classList.add("hidden");
+    $("formCancel").classList.add("hidden");
     bindManagerEvents();
     initFormControls();
+    if (!db) {
+      const n = $("publicFormError");
+      n.textContent = "This form isn't connected to the database yet. " + DB_NOT_READY;
+      n.hidden = false;
+    }
+    icons();
+  }
+
+  // ---------- Manager login + dashboard (?manage) ----------
+  let lastUid = null, sessionApplied = false, loginMsg = "";
+
+  function showManagerView(view, email = "") {
+    $("loginApp").hidden = view !== "login";
+    $("adminApp").hidden = view !== "admin";
+    $("userEmail").textContent = email;
+    $("loginError").textContent = view === "login" ? loginMsg : "";
+    document.body.style.overflow = "";
+    icons();
+  }
+
+  async function applySession(session) {
+    const uid = session && session.user ? session.user.id : null;
+    if (sessionApplied && uid === lastUid) return; // ignore token refreshes
+    sessionApplied = true; lastUid = uid;
+
+    if (!uid) { items = []; showManagerView("login"); return; }
+
+    // The account must also be on the admin allow-list defined in the database (is_admin)
+    let ok = false;
+    try { const { data, error } = await db.rpc("is_admin"); ok = !error && data === true; } catch { ok = false; }
+    if (!ok) {
+      loginMsg = "That account isn't authorised to manage the archive.";
+      await db.auth.signOut();
+      showManagerView("login");
+      return;
+    }
+    loginMsg = "";
+    showManagerView("admin", session.user.email || "");
     render();
     await loadItems(true);
   }
 
+  async function bootManage() {
+    bindManagerEvents();
+    initFormControls();
+    if (!db) { loginMsg = DB_NOT_READY; showManagerView("login"); $("loginBtn").disabled = true; return; }
+
+    $("loginForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = $("loginBtn");
+      loginMsg = ""; $("loginError").textContent = "";
+      btn.disabled = true; btn.textContent = "Signing in…";
+      const { error } = await db.auth.signInWithPassword({ email: $("loginEmail").value.trim(), password: $("loginPassword").value });
+      btn.disabled = false; btn.textContent = "Sign in";
+      if (error) { $("loginError").textContent = "Incorrect email or password."; return; }
+      $("loginPassword").value = "";
+    });
+    $("signOutBtn").addEventListener("click", async () => { await db.auth.signOut(); });
+
+    // Never await Supabase calls directly inside this callback (can deadlock), so defer
+    db.auth.onAuthStateChange((_event, session) => { setTimeout(() => applySession(session), 0); });
+    const { data } = await db.auth.getSession();
+    applySession(data ? data.session : null);
+  }
+
   // ---------- Init ----------
-  if (IS_PUBLIC_VIEW) bootPublic(); else bootDashboard();
+  if (MODE === "scan") bootPublic();
+  else if (MODE === "manage") bootManage();
+  else bootForm();
 })();
 </script>
 </body>
